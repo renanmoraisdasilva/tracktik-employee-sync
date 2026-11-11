@@ -32,6 +32,11 @@ bonus without turning the solution into a framework showcase.
 - There are more files than a single-project solution; the boundaries are worth
   it for the architecture criterion and the CQRS bonus.
 - The handlers are explicit and easy to test; there is no pipeline magic.
+- The OpenAPI document is generated and then normalized by one operation
+  transformer: the provider POST body is `oneOf` `Provider1Employee` /
+  `Provider2Employee`, and success/error media types are `application/json` /
+  `application/problem+json`. A contract test pins this so the served document
+  cannot drift from the committed contract.
 
 ## Alternatives considered
 

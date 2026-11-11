@@ -327,7 +327,8 @@ The default suite covers:
 - token cache: reuse, expiry, single-flight refresh, 401 refresh;
 - GET found and missing;
 - unknown provider: 404;
-- OpenAPI document reachable.
+- OpenAPI document reachable, with the `oneOf` provider bodies and
+  `application/problem+json` errors asserted by a contract test.
 
 Testcontainers runs the integration tests against a real SQL Server container.
 The category is opt-in so `dotnet test` stays fast and portable.

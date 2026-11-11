@@ -260,6 +260,11 @@ Every error response is `application/problem+json`:
 - Serve the Scalar UI at `/scalar/v1`.
 - Document both mandatory endpoints, both provider request shapes, the stored
   employee response and the 400/404/502 responses.
+- The served POST body is `oneOf` `Provider1Employee` / `Provider2Employee`;
+  success responses are `application/json` and errors are
+  `application/problem+json`.
+- An integration test asserts the served document matches the committed
+  contract.
 - Keep the `/api/v1` prefix.
 
 ## 6. Behavioural contract summary

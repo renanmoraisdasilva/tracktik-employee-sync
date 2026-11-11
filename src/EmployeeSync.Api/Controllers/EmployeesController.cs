@@ -25,12 +25,13 @@ public sealed class EmployeesController : ControllerBase
     }
 
     [HttpPost("providers/{provider}/employees")]
-    [ProducesResponseType(typeof(EmployeeResponse), StatusCodes.Status201Created)]
-    [ProducesResponseType(typeof(EmployeeResponse), StatusCodes.Status200OK)]
-    [ProducesResponseType(typeof(ValidationProblemDetails), StatusCodes.Status400BadRequest)]
-    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
-    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status502BadGateway)]
-    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status500InternalServerError)]
+    [Consumes("application/json")]
+    [ProducesResponseType(typeof(EmployeeResponse), StatusCodes.Status201Created, "application/json")]
+    [ProducesResponseType(typeof(EmployeeResponse), StatusCodes.Status200OK, "application/json")]
+    [ProducesResponseType(typeof(ValidationProblemDetails), StatusCodes.Status400BadRequest, "application/problem+json")]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound, "application/problem+json")]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status502BadGateway, "application/problem+json")]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status500InternalServerError, "application/problem+json")]
     public async Task<IActionResult> Submit(
         [FromRoute] string provider,
         [FromBody] JsonElement payload,
@@ -69,9 +70,9 @@ public sealed class EmployeesController : ControllerBase
     }
 
     [HttpGet("employees/{provider}/{providerEmployeeId}")]
-    [ProducesResponseType(typeof(EmployeeResponse), StatusCodes.Status200OK)]
-    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
-    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status500InternalServerError)]
+    [ProducesResponseType(typeof(EmployeeResponse), StatusCodes.Status200OK, "application/json")]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound, "application/problem+json")]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status500InternalServerError, "application/problem+json")]
     public async Task<IActionResult> Get(
         [FromRoute] string provider,
         [FromRoute] string providerEmployeeId,

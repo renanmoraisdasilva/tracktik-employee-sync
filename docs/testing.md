@@ -75,7 +75,7 @@ dotnet test tests/EmployeeSync.Testcontainers
 | Unknown provider | POST `/providers/provider3/...` | 404 ProblemDetails, no row |
 | GET found | GET after success | 200, full response |
 | GET missing | GET unknown identity | 404 ProblemDetails |
-| OpenAPI | GET `/openapi/v1.json` | 200, both routes |
+| OpenAPI | GET `/openapi/v1.json` | `oneOf` provider bodies, `application/json` success, `application/problem+json` errors, required fields |
 | Report | GET report | 200, counts by status |
 
 ## 5. `WebApplicationFactory`
@@ -153,20 +153,20 @@ branches are:
 
 ### Current coverage snapshot
 
-Measured on `main` on 11 November 2026 from the **37 unit + 15 SQLite
+Measured on `main` on 11 November 2026 from the **37 unit + 16 SQLite
 integration tests**:
 
 | Scope | Line | Branch |
 |---|---:|---:|
-| Overall | **70.5%** (1,260 / 1,787) | **48.8%** (192 / 393) |
+| Overall | **73.0%** (1,437 / 1,968) | **49.3%** (201 / 407) |
 | Application | 91.5% | 79.4% |
 | Domain | 91.2% | 73.1% |
-| API | 49.7% | 33.9% |
+| API | 61.2% | 35.6% |
 | Infrastructure | 70.0% | 63.3% |
 | Application + Domain | 91.4% | 77.7% |
-| Excluding generated OpenAPI and EF migrations | 85.5% | 70.6% |
+| Excluding generated OpenAPI and EF migrations | 87.1% | 70.1% |
 
-Method coverage is 87.3%; fully covered methods are 78.6%.
+Method coverage is 87.8%; fully covered methods are 78.7%.
 
 The raw number is dragged down by generated OpenAPI code and EF migrations.
 The NATS publisher is covered by the separate Testcontainers test, not by this

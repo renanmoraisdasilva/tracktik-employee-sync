@@ -5,9 +5,9 @@ info:
   description: |
     Spec-first API contract for the employee sync service.
 
-    The generated OpenAPI document served by the application may add framework
-    metadata; this file is the intended contract. The service itself has no
-    authentication; provider endpoints are internal to the challenge.
+    The running API serves the same provider shapes and media types at
+    `/openapi/v1.json`; this file is the reviewable contract. The service itself
+    has no authentication; provider endpoints are internal to the challenge.
 
     Error responses use `application/problem+json` (RFC 9457 / RFC 7807).
 servers:
@@ -259,7 +259,7 @@ components:
     Provider1Employee:
       type: object
       description: Flat snake_case payload from Provider 1.
-      required: [emp_id, first_name, last_name, email_address]
+      required: [emp_id, first_name, last_name, email_address, employment_status]
       properties:
         emp_id:
           type: string
@@ -293,7 +293,6 @@ components:
           example: "2024-01-15"
         employment_status:
           type: string
-          nullable: true
           enum: [active, inactive, terminated]
           example: active
 
@@ -312,19 +311,17 @@ components:
 
     PersonalInfo:
       type: object
+      required: [given_name, family_name, email]
       properties:
         given_name:
           type: string
-          nullable: true
           example: Carol
         family_name:
           type: string
-          nullable: true
           example: Davis
         email:
           type: string
           format: email
-          nullable: true
           example: carol.davis@provider2.com
         mobile:
           type: string
@@ -333,6 +330,7 @@ components:
 
     WorkInfo:
       type: object
+      required: [current_status]
       properties:
         role:
           type: string
@@ -349,7 +347,6 @@ components:
           example: "2024-02-01"
         current_status:
           type: string
-          nullable: true
           enum: [employed, on_leave, terminated]
           example: employed
 

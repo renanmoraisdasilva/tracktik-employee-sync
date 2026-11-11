@@ -1,4 +1,5 @@
 using EmployeeSync.Api.Extensions;
+using EmployeeSync.Api.OpenApi;
 using EmployeeSync.Application.Abstractions;
 using EmployeeSync.Application.Commands.SubmitEmployee;
 using EmployeeSync.Application.Contracts;
@@ -20,7 +21,11 @@ var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddControllers();
 builder.Services.AddProblemDetails();
-builder.Services.AddOpenApi();
+builder.Services.AddOpenApi(options =>
+{
+    options.AddOperationTransformer<ProviderRequestOpenApiTransformer>();
+    options.AddDocumentTransformer<OpenApiDocumentCleanupTransformer>();
+});
 builder.Services.AddHealthChecks().AddDbContextCheck<AppDbContext>();
 builder.Services.AddSingleton<TimeProvider>(TimeProvider.System);
 

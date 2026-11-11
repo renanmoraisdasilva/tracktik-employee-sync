@@ -20,8 +20,8 @@ public sealed class ReportsController : ControllerBase
     }
 
     [HttpGet("employees-by-sync-status")]
-    [ProducesResponseType(typeof(IReadOnlyList<SyncStatusCount>), StatusCodes.Status200OK)]
-    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status500InternalServerError)]
+    [ProducesResponseType(typeof(IReadOnlyList<SyncStatusCount>), StatusCodes.Status200OK, "application/json")]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status500InternalServerError, "application/problem+json")]
     public async Task<IActionResult> GetCounts(CancellationToken cancellationToken)
     {
         var result = await _handler.HandleAsync(new GetEmployeeCountsQuery(), cancellationToken);
