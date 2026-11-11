@@ -443,6 +443,10 @@ An outbox is documented as a stretch goal, not implemented in v1.
   the next reliability step.
 - **TrackTik success + status update failure:** the status update is retried;
   if it still fails, the API returns 500 and logs the inconsistency.
+- **TrackTik rate limits:** the mock allows 100 requests per minute and 1,000 per
+  hour per client. A `429` is recorded as a failed attempt and returned as `502`.
+  There is no automatic retry and no `Retry-After` handling because resubmission
+  is the retry mechanism.
 - **No automatic retries** for TrackTik 5xx/429; resubmission is the retry
   mechanism. A 401 triggers one token refresh and one retry.
 - **No auth on the provider endpoints.** The challenge does not ask for it;

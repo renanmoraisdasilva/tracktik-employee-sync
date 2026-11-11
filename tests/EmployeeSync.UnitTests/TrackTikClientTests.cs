@@ -112,6 +112,23 @@ public sealed class TrackTikClientTests
     }
 
     [Fact]
+    public async Task Rate_limited_response_is_a_failure_and_is_not_retried()
+    {
+        var handler = new RecordingHandler();
+        handler.Responses.Enqueue(new HttpResponseMessage(HttpStatusCode.TooManyRequests)
+        {
+            Content = new StringContent("rate limited", Encoding.UTF8, "text/plain")
+        });
+        var client = CreateClient(handler, new FakeTokenProvider("token-1"));
+
+        var exception = await Should.ThrowAsync<TrackTikException>(
+            () => client.CreateAsync(Employee, CancellationToken.None));
+
+        exception.SafeMessage.ShouldContain("429");
+        handler.Requests.Count.ShouldBe(1);
+    }
+
+    [Fact]
     public async Task Request_timeout_becomes_a_tracktik_exception()
     {
         var client = new TrackTikClient(

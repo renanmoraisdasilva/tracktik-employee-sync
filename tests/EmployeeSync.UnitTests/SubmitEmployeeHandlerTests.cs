@@ -128,6 +128,45 @@ public sealed class SubmitEmployeeHandlerTests
     }
 
     [Fact]
+    public async Task Concurrent_insert_race_reloads_and_updates_the_existing_row()
+    {
+        var harness = new Harness();
+        var existing = Employee.Create(
+            new EmployeeIdentity("provider1", "P1_001"),
+            Mapped,
+            harness.Clock.GetUtcNow());
+
+        harness.Repository.FindAsync(
+                Arg.Any<EmployeeIdentity>(),
+                Arg.Any<CancellationToken>())
+            .Returns(
+                Task.FromResult<Employee?>(null),
+                Task.FromResult<Employee?>(existing));
+        harness.Repository.TryAddAsync(
+                Arg.Any<Employee>(),
+                Arg.Any<CancellationToken>())
+            .Returns(false);
+
+        var result = await harness.Handler.HandleAsync(
+            new SubmitEmployeeCommand("provider1", Payload),
+            CancellationToken.None);
+
+        result.IsSuccess.ShouldBeTrue();
+        result.Value.Created.ShouldBeFalse();
+        result.Value.Employee.Attempts.ShouldBe(1);
+        result.Value.Employee.SyncStatus.ShouldBe("synced");
+
+        await harness.Repository.Received(1).TryAddAsync(
+            Arg.Any<Employee>(),
+            Arg.Any<CancellationToken>());
+        await harness.Repository.Received(2).SaveChangesAsync(
+            Arg.Any<CancellationToken>());
+        await harness.TrackTik.Received(1).CreateAsync(
+            Arg.Any<TrackTikEmployee>(),
+            Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
     public async Task Failed_resubmission_that_never_created_still_uses_post()
     {
         var harness = new Harness();

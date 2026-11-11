@@ -1,5 +1,6 @@
 using System.Net;
 using System.Net.Http.Json;
+using System.Text;
 using System.Text.Json;
 using EmployeeSync.Application.Contracts;
 using EmployeeSync.Infrastructure.Persistence;
@@ -136,6 +137,35 @@ public sealed class EmployeeApiTests : IClassFixture<ApiFactory>
 
         response.StatusCode.ShouldBe(HttpStatusCode.NotFound);
         CountRows("provider3", "IT_005").ShouldBe(0);
+    }
+
+    [Fact]
+    public async Task Get_unknown_provider_returns_404_problem_details()
+    {
+        var response = await _client.GetAsync("/api/v1/employees/provider3/UNKNOWN");
+
+        response.StatusCode.ShouldBe(HttpStatusCode.NotFound);
+        response.Content.Headers.ContentType?.MediaType.ShouldBe("application/problem+json");
+    }
+
+    [Fact]
+    public async Task Malformed_json_returns_400_problem_details()
+    {
+        var response = await _client.PostAsync(
+            "/api/v1/providers/provider1/employees",
+            new StringContent("{", Encoding.UTF8, "application/json"));
+
+        response.StatusCode.ShouldBe(HttpStatusCode.BadRequest);
+        response.Content.Headers.ContentType?.MediaType.ShouldBe("application/problem+json");
+    }
+
+    [Fact]
+    public async Task Unknown_route_returns_404_problem_details()
+    {
+        var response = await _client.GetAsync("/api/v1/does-not-exist");
+
+        response.StatusCode.ShouldBe(HttpStatusCode.NotFound);
+        response.Content.Headers.ContentType?.MediaType.ShouldBe("application/problem+json");
     }
 
     [Fact]
