@@ -33,6 +33,11 @@ jobs:
       - name: Build
         run: dotnet build EmployeeSync.sln --configuration Release --no-restore
 
+      # The Testcontainers project is intentionally outside the solution so
+      # dotnet test stays Docker-free. Build it to catch compile regressions.
+      - name: Build Testcontainers tests
+        run: dotnet build tests/EmployeeSync.Testcontainers --configuration Release
+
       - name: Unit tests
         run: dotnet test tests/EmployeeSync.UnitTests --configuration Release --no-build
 

@@ -142,6 +142,9 @@ See [`specs/001-employee-sync/data-model.md`](specs/001-employee-sync/data-model
 
 - `Employees` table with a unique index on
   `(Provider, ProviderEmployeeId)`.
+- `ProviderEmployeeId` is case-sensitive: SQL Server uses
+  `Latin1_General_100_BIN2`; SQLite's default comparison is already
+  case-sensitive.
 - `SyncStatus` and `Status` check constraints.
 - `ExistsInTrackTik` drives POST vs PUT.
 - Committed migrations.

@@ -54,7 +54,13 @@ public sealed class NatsEventPublisherTests : IAsyncLifetime
         var message = await subscription.Msgs.ReadAsync(cancellation.Token);
         message.Data.ShouldNotBeNull();
 
-        var received = JsonSerializer.Deserialize<EmployeeSynced>(message.Data!);
+        using var payload = JsonDocument.Parse(message.Data!);
+        payload.RootElement.TryGetProperty("eventId", out _).ShouldBeTrue();
+        payload.RootElement.TryGetProperty("EventId", out _).ShouldBeFalse();
+
+        var received = JsonSerializer.Deserialize<EmployeeSynced>(
+            message.Data!,
+            JsonSerializerOptions.Web);
         received.ShouldNotBeNull();
         received!.EventId.ShouldBe(domainEvent.EventId);
         received.Provider.ShouldBe("provider1");

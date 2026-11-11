@@ -40,8 +40,8 @@ portable.
 - SQLite is relational but not SQL Server; a few SQL Server-specific behaviors
   are only covered by the opt-in project.
 - CI is deterministic and meaningful, and it exercises the HTTP pipeline through
-  SQLite. It does not prove SQL Server-specific behaviour; the README tells the
-  reviewer how to run Testcontainers locally.
+  SQLite. It builds the Testcontainers project to catch compile regressions but
+  does not run it; SQL Server-specific behaviour is still proven locally.
 
 ## Alternatives considered
 

@@ -149,6 +149,25 @@ public sealed class EmployeeApiTests : IClassFixture<ApiFactory>
     }
 
     [Fact]
+    public async Task Provider_employee_ids_are_case_sensitive()
+    {
+        const string lower = "IT_case";
+        const string upper = "IT_CASE";
+
+        var first = await _client.PostAsync(
+            "/api/v1/providers/provider1/employees",
+            Provider1Payload(lower));
+        var second = await _client.PostAsync(
+            "/api/v1/providers/provider1/employees",
+            Provider1Payload(upper));
+
+        first.StatusCode.ShouldBe(HttpStatusCode.Created);
+        second.StatusCode.ShouldBe(HttpStatusCode.Created);
+        CountRows("provider1", lower).ShouldBe(1);
+        CountRows("provider1", upper).ShouldBe(1);
+    }
+
+    [Fact]
     public async Task TrackTik_failure_returns_502_keeps_failed_row_and_emits_no_event()
     {
         const string id = "IT_003";

@@ -13,7 +13,7 @@
 |---|---|---|---|---|
 | `Id` | `uniqueidentifier` | No | `NEWSEQUENTIALID()` / app | Primary key. The selected design uses `uniqueidentifier`. |
 | `Provider` | `nvarchar(32)` | No | — | `provider1` / `provider2`, normalised lowercase. |
-| `ProviderEmployeeId` | `nvarchar(128)` | No | — | Source ID. Part of the unique key. |
+| `ProviderEmployeeId` | `nvarchar(128)` | No | — | Source ID, case-sensitive (`Latin1_General_100_BIN2`). Part of the unique key. |
 | `TrackTikEmployeeId` | `nvarchar(160)` | No | — | `{Provider}-{ProviderEmployeeId}`. |
 | `FirstName` | `nvarchar(100)` | No | — | TrackTik required. |
 | `LastName` | `nvarchar(100)` | No | — | TrackTik required. |
@@ -47,6 +47,11 @@ ON dbo.Employees (Provider, ProviderEmployeeId);
 
 This is the rule that prevents duplicates. It also makes the upsert race safe:
 a duplicate-key error is retried as an update.
+
+`ProviderEmployeeId` uses the `Latin1_General_100_BIN2` collation on SQL Server,
+so `P1_001` and `p1_001` are different keys. SQLite's default text comparison is
+already case-sensitive. This keeps the database and application semantics
+aligned.
 
 ### Check constraints
 
@@ -87,7 +92,9 @@ Used by the report query and by failure inspection.
 | `inactive` | On leave or otherwise not active. |
 | `terminated` | No longer employed. |
 
-Status values are stored as strings for readability and check constraints.
+`Unknown` is an internal parser sentinel. `MappedEmployeeValidator` rejects it,
+so it is never persisted. Status values are stored as strings for readability
+and check constraints.
 
 ## 4. `ExistsInTrackTik`
 

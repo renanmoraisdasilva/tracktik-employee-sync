@@ -25,7 +25,6 @@ public static class DependencyInjection
         }
 
         services.Configure<TrackTikOptions>(configuration.GetSection(TrackTikOptions.SectionName));
-        services.Configure<EventOptions>(configuration.GetSection(EventOptions.SectionName));
         services.Configure<NatsOptions>(configuration.GetSection(NatsOptions.SectionName));
 
         services.AddHttpClient("TrackTikToken", (serviceProvider, client) =>
@@ -45,7 +44,7 @@ public static class DependencyInjection
         services.AddScoped<IEmployeeRepository, EmployeeRepository>();
         services.AddScoped<IEmployeeReportRepository, EmployeeReportRepository>();
 
-        var eventMode = configuration[$"{EventOptions.SectionName}:Mode"] ?? "InMemory";
+        var eventMode = configuration["Events:Mode"] ?? "InMemory";
         if (eventMode.Equals("Nats", StringComparison.OrdinalIgnoreCase))
         {
             services.AddSingleton<IEventPublisher, NatsEventPublisher>();

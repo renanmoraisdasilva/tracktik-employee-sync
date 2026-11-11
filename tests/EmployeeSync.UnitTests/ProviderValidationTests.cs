@@ -3,6 +3,7 @@ using EmployeeSync.Application.Providers.Provider1;
 using EmployeeSync.Application.Providers.Provider2;
 using EmployeeSync.Application.Validation;
 using EmployeeSync.Domain.Common;
+using EmployeeSync.Domain.Employees;
 using Shouldly;
 
 namespace EmployeeSync.UnitTests;
@@ -14,6 +15,15 @@ public sealed class ProviderValidationTests
 
     private static readonly Provider2Adapter Provider2 =
         new(new Provider2EmployeeValidator(), new MappedEmployeeValidator());
+
+    [Fact]
+    public void TryParse_invalid_value_returns_false_and_unknown()
+    {
+        EmployeeStatusExtensions.TryParse("retired", out var status)
+            .ShouldBeFalse();
+
+        status.ShouldBe(EmployeeStatus.Unknown);
+    }
 
     [Fact]
     public async Task Provider1_rejects_a_missing_email()

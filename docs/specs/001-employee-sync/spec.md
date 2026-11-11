@@ -83,6 +83,9 @@ The unique identity is `(provider, providerEmployeeId)`.
 - Provider 2: `providerEmployeeId = employee_number`.
 - The TrackTik `employeeId` is `{provider}-{providerEmployeeId}`.
 - Two providers with the same email are two distinct employees.
+- `providerEmployeeId` is case-sensitive: `P1_001` and `p1_001` are different
+  identities. SQL Server uses a binary collation on the column; SQLite is
+  case-sensitive by default.
 - A unique database index enforces the identity pair.
 
 ### FR-003 — Validation

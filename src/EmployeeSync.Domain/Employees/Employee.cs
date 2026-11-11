@@ -96,8 +96,6 @@ public sealed class Employee
         UpdatedAt = now;
     }
 
-    public void SetExistsInTrackTik(bool value) => ExistsInTrackTik = value;
-
     private void Apply(MappedEmployee mapped, DateTimeOffset now)
     {
         FirstName = mapped.FirstName;

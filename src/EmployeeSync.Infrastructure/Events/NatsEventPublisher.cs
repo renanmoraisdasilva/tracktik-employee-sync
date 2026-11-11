@@ -9,6 +9,9 @@ namespace EmployeeSync.Infrastructure.Events;
 
 public sealed class NatsEventPublisher : IEventPublisher, IAsyncDisposable
 {
+    private static readonly JsonSerializerOptions SerializerOptions =
+        new(JsonSerializerDefaults.Web);
+
     private readonly NatsOptions _options;
     private readonly ILogger<NatsEventPublisher> _logger;
     private readonly SemaphoreSlim _connectionLock = new(1, 1);
@@ -26,7 +29,9 @@ public sealed class NatsEventPublisher : IEventPublisher, IAsyncDisposable
     public async Task PublishAsync(EmployeeSynced domainEvent, CancellationToken cancellationToken)
     {
         var connection = await GetConnectionAsync(cancellationToken);
-        var payload = JsonSerializer.SerializeToUtf8Bytes(domainEvent);
+        var payload = JsonSerializer.SerializeToUtf8Bytes(
+            domainEvent,
+            SerializerOptions);
 
         await connection.PublishAsync(
             _options.Subject,

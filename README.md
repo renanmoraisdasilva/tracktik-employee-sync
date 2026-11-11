@@ -330,7 +330,7 @@ dotnet test tests/EmployeeSync.Testcontainers
 The default suite covers:
 
 - mapping for both providers against the golden sample output;
-- status mapping and identity derivation;
+- status mapping, identity derivation and case-sensitive provider IDs;
 - validation failures: 400, no row, no TrackTik call;
 - sync success: `synced`, attempts, cleared error, event;
 - sync failure: 502, `failed` row, no event;
@@ -341,13 +341,16 @@ The default suite covers:
 - OpenAPI document reachable, with the `oneOf` provider bodies and
   `application/problem+json` errors asserted by a contract test.
 
-Testcontainers runs two focused tests: a real SQL Server POST/persistence test
-and a real NATS publish test. The category is opt-in so `dotnet test` stays fast
-and portable.
+Testcontainers runs three focused tests: a real SQL Server POST/persistence
+test, a SQL Server case-sensitive identity test, and a real NATS publish test
+that also asserts camelCase JSON. The category is opt-in so `dotnet test` stays
+fast and portable. The project is intentionally outside `EmployeeSync.sln` so a
+bare `dotnet test` stays Docker-free; CI builds it separately to catch compile
+regressions.
 
 CI runs restore, build, unit tests, the SQLite integration tests and a secret
-scan. Testcontainers tests remain local and opt-in; they are not part of the
-default CI job.
+scan. It also **builds** the Testcontainers project so compile regressions are
+caught, but does not run those tests; they remain local and opt-in.
 
 Coverage snapshot and caveats: [docs/testing.md](docs/testing.md#9-coverage-philosophy).
 
@@ -450,6 +453,9 @@ An outbox is documented as a stretch goal, not implemented in v1.
 - **Strict validation:** payloads that pass the provider schema but lack
   `firstName`, `lastName`, `email` or `status` are rejected with 400 before
   writing, because they cannot produce a valid TrackTik employee.
+- **Identity case:** `providerEmployeeId` is case-sensitive; `P1_001` and
+  `p1_001` are different employees. SQL Server uses a binary collation on the
+  column, and SQLite is case-sensitive by default.
 - **Concurrency:** unique index on `(Provider, ProviderEmployeeId)`; a
   duplicate-key race is retried as an update. This is last-write-wins; a lost
   update is possible under extreme concurrency.

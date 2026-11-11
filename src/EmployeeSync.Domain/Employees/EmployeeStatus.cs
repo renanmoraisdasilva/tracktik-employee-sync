@@ -2,6 +2,7 @@ namespace EmployeeSync.Domain.Employees;
 
 public enum EmployeeStatus
 {
+    Unknown = 0,
     Active,
     Inactive,
     Terminated
@@ -19,14 +20,20 @@ public static class EmployeeStatusExtensions
 
     public static bool TryParse(string? value, out EmployeeStatus status)
     {
-        status = value?.Trim().ToLowerInvariant() switch
+        switch (value?.Trim().ToLowerInvariant())
         {
-            "active" => EmployeeStatus.Active,
-            "inactive" => EmployeeStatus.Inactive,
-            "terminated" => EmployeeStatus.Terminated,
-            _ => EmployeeStatus.Active
-        };
-
-        return value?.Trim().ToLowerInvariant() is "active" or "inactive" or "terminated";
+            case "active":
+                status = EmployeeStatus.Active;
+                return true;
+            case "inactive":
+                status = EmployeeStatus.Inactive;
+                return true;
+            case "terminated":
+                status = EmployeeStatus.Terminated;
+                return true;
+            default:
+                status = EmployeeStatus.Unknown;
+                return false;
+        }
     }
 }

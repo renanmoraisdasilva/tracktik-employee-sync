@@ -34,9 +34,17 @@ public sealed class AppDbContext : DbContext
                 .HasMaxLength(32)
                 .IsRequired();
 
-            builder.Property(employee => employee.ProviderEmployeeId)
+            var providerEmployeeId = builder.Property(employee => employee.ProviderEmployeeId)
                 .HasMaxLength(128)
                 .IsRequired();
+
+            if (Database.IsSqlServer())
+            {
+                // Provider IDs are opaque and case-sensitive. SQL Server's
+                // default collation would treat P1_001 and p1_001 as the same
+                // identity, unlike SQLite and the application.
+                providerEmployeeId.UseCollation("Latin1_General_100_BIN2");
+            }
 
             builder.Property(employee => employee.TrackTikEmployeeId)
                 .HasMaxLength(160)
@@ -61,16 +69,8 @@ public sealed class AppDbContext : DbContext
 
             builder.Property(employee => employee.Status)
                 .HasConversion(new ValueConverter<EmployeeStatus, string>(
-                    status => status == EmployeeStatus.Active
-                        ? "active"
-                        : status == EmployeeStatus.Inactive
-                            ? "inactive"
-                            : "terminated",
-                    value => value == "active"
-                        ? EmployeeStatus.Active
-                        : value == "inactive"
-                            ? EmployeeStatus.Inactive
-                            : EmployeeStatus.Terminated))
+                    status => ToStorage(status),
+                    value => FromStorage(value)))
                 .HasMaxLength(16)
                 .IsRequired();
 
@@ -105,4 +105,22 @@ public sealed class AppDbContext : DbContext
                 .HasDatabaseName("IX_Employees_SyncStatus");
         });
     }
+
+    private static string ToStorage(EmployeeStatus status) => status switch
+    {
+        EmployeeStatus.Active => "active",
+        EmployeeStatus.Inactive => "inactive",
+        EmployeeStatus.Terminated => "terminated",
+        _ => throw new InvalidOperationException(
+            $"Unsupported employee status '{status}'.")
+    };
+
+    private static EmployeeStatus FromStorage(string value) => value switch
+    {
+        "active" => EmployeeStatus.Active,
+        "inactive" => EmployeeStatus.Inactive,
+        "terminated" => EmployeeStatus.Terminated,
+        _ => throw new InvalidOperationException(
+            $"Unsupported employee status '{value}'.")
+    };
 }

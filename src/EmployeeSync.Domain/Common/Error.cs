@@ -16,9 +16,6 @@ public sealed record Error(
     public static Error NotFound(string message) =>
         new(ErrorType.NotFound, "not_found", message);
 
-    public static Error Conflict(string message) =>
-        new(ErrorType.Conflict, "conflict", message);
-
     public static Error SyncFailed(string message, SyncFailureInfo info) =>
         new(ErrorType.SyncFailed, "tracktik_sync_failed", message, null, info);
 

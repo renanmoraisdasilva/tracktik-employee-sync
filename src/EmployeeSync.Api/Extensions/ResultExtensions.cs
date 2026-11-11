@@ -18,12 +18,6 @@ public static class ResultExtensions
                 error.Message,
                 instance,
                 controller),
-            ErrorType.Conflict => ProblemResult(
-                StatusCodes.Status409Conflict,
-                "Conflict",
-                error.Message,
-                instance,
-                controller),
             ErrorType.SyncFailed => SyncFailureResult(error, instance, controller),
             _ => ProblemResult(
                 StatusCodes.Status500InternalServerError,

@@ -17,6 +17,9 @@ The mock TrackTik API is stateless: `GET` always returns a sample record and
 ## Decision
 
 - Use a unique index on `(Provider, ProviderEmployeeId)`.
+- Treat `ProviderEmployeeId` as case-sensitive. On SQL Server the column uses
+  `Latin1_General_100_BIN2`; SQLite's default comparison is already
+  case-sensitive.
 - Store the derived `TrackTikEmployeeId`.
 - Persist an `ExistsInTrackTik` flag:
   - start `false`;
@@ -35,6 +38,8 @@ The mock TrackTik API is stateless: `GET` always returns a sample record and
 ## Consequences
 
 - Exactly one row per identity; resubmission cannot duplicate.
+- Case-only variants are distinct identities, consistent across SQL Server and
+  SQLite.
 - The POST/PUT decision is deterministic and testable.
 - The flag has a hard edge case: if TrackTik accepts a POST but the status
   update fails, the flag can remain `false` and a retry could POST again. The

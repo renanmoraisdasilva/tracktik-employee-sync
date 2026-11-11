@@ -40,16 +40,7 @@ public sealed class SqlServerIntegrationTests : IAsyncLifetime
     {
         const string id = "TC_001";
 
-        var response = await _client.PostAsync(
-            "/api/v1/providers/provider1/employees",
-            JsonContent.Create(new Dictionary<string, object?>
-            {
-                ["emp_id"] = id,
-                ["first_name"] = "Real",
-                ["last_name"] = "SqlServer",
-                ["email_address"] = "real.sqlserver@provider1.com",
-                ["employment_status"] = "active"
-            }));
+        var response = await PostEmployee(id);
 
         response.StatusCode.ShouldBe(HttpStatusCode.Created);
 
@@ -71,4 +62,38 @@ public sealed class SqlServerIntegrationTests : IAsyncLifetime
         _factory.Events.Events.ShouldContain(
             domainEvent => domainEvent.ProviderEmployeeId == id);
     }
+
+    [Fact]
+    public async Task Provider_employee_ids_are_case_sensitive()
+    {
+        const string lower = "TC_case";
+        const string upper = "TC_CASE";
+
+        var first = await PostEmployee(lower);
+        var second = await PostEmployee(upper);
+
+        first.StatusCode.ShouldBe(HttpStatusCode.Created);
+        second.StatusCode.ShouldBe(HttpStatusCode.Created);
+
+        using var scope = _factory.Services.CreateScope();
+        var dbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+        var count = await dbContext.Employees.CountAsync(
+            employee => employee.Provider == "provider1"
+                && (employee.ProviderEmployeeId == lower
+                    || employee.ProviderEmployeeId == upper));
+
+        count.ShouldBe(2);
+    }
+
+    private Task<HttpResponseMessage> PostEmployee(string id) =>
+        _client.PostAsync(
+            "/api/v1/providers/provider1/employees",
+            JsonContent.Create(new Dictionary<string, object?>
+            {
+                ["emp_id"] = id,
+                ["first_name"] = "Real",
+                ["last_name"] = "SqlServer",
+                ["email_address"] = $"{id.ToLowerInvariant()}@provider1.com",
+                ["employment_status"] = "active"
+            }));
 }

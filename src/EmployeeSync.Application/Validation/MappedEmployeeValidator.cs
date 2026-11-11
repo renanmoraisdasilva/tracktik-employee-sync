@@ -14,6 +14,8 @@ public sealed class MappedEmployeeValidator : AbstractValidator<MappedEmployee>
         RuleFor(x => x.PhoneNumber).MaximumLength(40);
         RuleFor(x => x.Position).MaximumLength(120);
         RuleFor(x => x.Department).MaximumLength(120);
-        RuleFor(x => x.Status).IsInEnum();
+        RuleFor(x => x.Status)
+            .IsInEnum()
+            .NotEqual(EmployeeStatus.Unknown);
     }
 }
