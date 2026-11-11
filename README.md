@@ -80,9 +80,14 @@ take 20–40 seconds on the first start; wait for its health check, then watch
 # Start only the dependencies
 docker compose up -d sqlserver nats
 
-# Configure the TrackTik credentials outside git
+# Configure the connection string and TrackTik credentials outside git
 cd src/EmployeeSync.Api
 dotnet user-secrets init
+
+# Use the same password you put in MSSQL_SA_PASSWORD in .env
+dotnet user-secrets set "ConnectionStrings:EmployeeSync" \
+  "Server=localhost,1433;Database=EmployeeSync;User Id=sa;Password=YOUR_LOCAL_SA_PASSWORD;TrustServerCertificate=True;Encrypt=True"
+
 dotnet user-secrets set "TrackTik:BaseUrl" "https://.../prod/v1"
 dotnet user-secrets set "TrackTik:TokenUrl" "https://.../prod/oauth/token"
 dotnet user-secrets set "TrackTik:ClientId" "YOUR_CLIENT_ID"
@@ -94,6 +99,11 @@ dotnet ef database update \
   --startup-project .
 dotnet run
 ```
+
+The committed `appsettings.json` connection string contains a placeholder
+password. The user-secret above overrides it with the password your Compose SQL
+Server is actually using; the equivalent environment variable is
+`ConnectionStrings__EmployeeSync`.
 
 The local API uses `http://localhost:8080` when launched with
 `ASPNETCORE_URLS=http://localhost:8080`; adjust the port if your launch profile
@@ -118,6 +128,7 @@ example `TrackTik__ClientSecret`.
 | `TrackTik__TimeoutSeconds` | HTTP timeout | `15` |
 | `Events__Mode` | `InMemory` or `Nats` | `InMemory` |
 | `Nats__Url` | NATS connection URL | `nats://localhost:4222` |
+| `Nats__Subject` | NATS subject for `EmployeeSynced` | `tracktik.employees.synced` |
 | `Database__AutoMigrate` | Apply migrations at startup | `true` in Compose |
 
 The Compose file sets `Events__Mode=Nats` and starts NATS. `dotnet run` defaults
@@ -407,6 +418,9 @@ docs/
   testing.md
 db/
   reports/employee-counts-by-sync-status.sql
+samples/
+  provider1-one.json
+  provider2-one.json
 docker-compose.yml
 Dockerfile
 ```

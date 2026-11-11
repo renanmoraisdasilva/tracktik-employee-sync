@@ -47,13 +47,15 @@ Wait for the SQL Server health check, then open:
 ```bash
 curl.exe -X POST "http://localhost:8080/api/v1/providers/provider1/employees" \
   -H "Content-Type: application/json" \
-  -d "@provider1-one.json"
+  -d "@samples/provider1-one.json"
 ```
 
 Expected: `201 Created` on the first insert, with a `Location` header and
 `syncStatus: "synced"` in the body.
 
 Send the same payload again: `200 OK`, same row, `PUT` to TrackTik.
+
+Provider 2 uses the nested shape in `samples/provider2-one.json`.
 
 ## 5. Read it back
 

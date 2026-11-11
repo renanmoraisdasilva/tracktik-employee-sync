@@ -46,9 +46,9 @@ services:
       TrackTik__ClientId: ${TRACKTIK_CLIENT_ID}
       TrackTik__ClientSecret: ${TRACKTIK_CLIENT_SECRET}
       TrackTik__Scope: ${TRACKTIK_SCOPE:-}
-      Events__Mode: Nats
-      Nats__Url: nats://nats:4222
-      Nats__Subject: tracktik.employees.synced
+      Events__Mode: ${EVENTS_MODE:-Nats}
+      Nats__Url: ${NATS_URL:-nats://nats:4222}
+      Nats__Subject: ${NATS_SUBJECT:-tracktik.employees.synced}
       Database__AutoMigrate: "true"
     ports:
       - "8080:8080"

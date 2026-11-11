@@ -1,0 +1,15 @@
+{
+  "employee_number": "P2_001",
+  "personal_info": {
+    "given_name": "Carol",
+    "family_name": "Davis",
+    "email": "carol.davis@provider2.com",
+    "mobile": "+1-555-0201"
+  },
+  "work_info": {
+    "role": "Security Guard",
+    "division": "Night Shift Security",
+    "start_date": "2024-02-01",
+    "current_status": "employed"
+  }
+}
