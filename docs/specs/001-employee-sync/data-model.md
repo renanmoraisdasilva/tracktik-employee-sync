@@ -31,7 +31,6 @@
 | `CreatedAt` | `datetimeoffset(7)` | No | — | UTC. |
 | `UpdatedAt` | `datetimeoffset(7)` | No | — | UTC. |
 | `SyncedAt` | `datetimeoffset(7)` | Yes | — | Last successful sync. |
-| `RowVersion` | `rowversion` | No | — | Optional optimistic concurrency token. |
 
 > The timestamps are modelled as `DateTimeOffset` and mapped to
 > `datetimeoffset(7)`. If you prefer UTC `DateTime`, use `datetime2(7)` and keep
@@ -103,11 +102,11 @@ Never read the mock's `GET` to decide. The mock always returns a sample record.
 
 - The unique index is the primary protection against duplicates.
 - On a duplicate-key race during insert, re-read the row and retry as an update.
-- `RowVersion` is optional. If used, a concurrent update can be detected and
-  retried or returned as `409`. The v1 behavior is **unique index + retry**,
-  not `409`.
-- Last-write-wins is acceptable for this challenge; a lost update is possible
-  under extreme concurrency. Document it.
+- The v1 schema does not include a `rowversion` column. The **unique index +
+  retry** behavior is the concurrency control, not `409`.
+- A future version can add `rowversion` for optimistic concurrency. Last-write-
+  wins is acceptable for this challenge; a lost update is possible under extreme
+  concurrency. Document it.
 
 ## 6. Migrations
 

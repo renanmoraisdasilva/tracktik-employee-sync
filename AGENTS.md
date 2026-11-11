@@ -16,7 +16,7 @@ stores them in SQL Server, and synchronises them to a mock TrackTik API.
 ```powershell
 dotnet build
 dotnet test
-dotnet test --filter Category=Testcontainers   # Docker
+dotnet test tests/EmployeeSync.Testcontainers   # Docker
 docker compose up --build
 dotnet ef database update `
   --project src/EmployeeSync.Infrastructure `

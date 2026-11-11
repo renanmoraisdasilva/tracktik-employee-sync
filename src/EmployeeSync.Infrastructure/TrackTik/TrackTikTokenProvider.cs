@@ -1,4 +1,5 @@
 using System.Net.Http.Json;
+using System.Text.Json;
 using System.Text.Json.Serialization;
 using EmployeeSync.Application.Abstractions;
 using EmployeeSync.Application.Common.Exceptions;
@@ -95,6 +96,10 @@ public sealed class TrackTikTokenProvider : ITrackTikTokenProvider
         catch (HttpRequestException exception)
         {
             throw new TrackTikException("The TrackTik token request failed.", exception);
+        }
+        catch (JsonException exception)
+        {
+            throw new TrackTikException("The TrackTik token response was invalid.", exception);
         }
         finally
         {

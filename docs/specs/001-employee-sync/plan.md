@@ -72,7 +72,7 @@ API and SQL Server; `/health` returns healthy; no secret is committed.
   - unique index `(Provider, ProviderEmployeeId)`;
   - check constraints for `SyncStatus` and `Status`;
   - `datetimeoffset(7)` timestamps, `date` for `StartDate`;
-  - `rowversion` optional concurrency token.
+  - `rowversion` is a future option; v1 uses the unique index + retry.
 - Add `IEmployeeRepository` and the EF Core implementation.
 - Add the initial migration.
 - Add a startup migration path with retry and the `Database__AutoMigrate` flag.
