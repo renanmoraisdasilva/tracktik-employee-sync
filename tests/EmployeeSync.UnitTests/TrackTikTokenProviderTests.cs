@@ -112,6 +112,34 @@ public sealed class TrackTikTokenProviderTests
     }
 
     [Fact]
+    public async Task Token_endpoint_timeout_is_a_tracktik_exception()
+    {
+        var handler = new TokenHandler { SimulateTimeout = true };
+        var clock = new FakeTimeProvider(
+            new DateTimeOffset(2026, 11, 11, 12, 0, 0, TimeSpan.Zero));
+        var provider = CreateProvider(handler, clock);
+
+        var exception = await Should.ThrowAsync<TrackTikException>(
+            () => provider.GetTokenAsync(CancellationToken.None));
+
+        exception.SafeMessage.ShouldContain("timed out");
+    }
+
+    [Fact]
+    public async Task Caller_cancellation_is_not_converted_to_a_tracktik_exception()
+    {
+        var handler = new TokenHandler();
+        var clock = new FakeTimeProvider(
+            new DateTimeOffset(2026, 11, 11, 12, 0, 0, TimeSpan.Zero));
+        var provider = CreateProvider(handler, clock);
+        using var cancellation = new CancellationTokenSource();
+        cancellation.Cancel();
+
+        await Should.ThrowAsync<OperationCanceledException>(
+            () => provider.GetTokenAsync(cancellation.Token));
+    }
+
+    [Fact]
     public async Task Token_endpoint_failure_is_a_tracktik_exception()
     {
         var handler = new TokenHandler { Fail = true };
@@ -158,11 +186,20 @@ public sealed class TrackTikTokenProviderTests
 
         public string? BodyOverride { get; init; }
 
+        public bool SimulateTimeout { get; init; }
+
         protected override async Task<HttpResponseMessage> SendAsync(
             HttpRequestMessage request,
             CancellationToken cancellationToken)
         {
             Calls++;
+
+            if (SimulateTimeout)
+            {
+                throw new TaskCanceledException(
+                    "The request timed out.",
+                    new TimeoutException());
+            }
             LastBody = request.Content is null
                 ? null
                 : await request.Content.ReadAsStringAsync(cancellationToken);

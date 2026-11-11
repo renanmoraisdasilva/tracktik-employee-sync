@@ -21,9 +21,9 @@ extend the rate-limit window.
 
 ## Decision
 
-- Treat every upstream employee-call failure as one failed attempt:
-  `401` after the one refresh, `403`, `404`, `409` after the PUT fallback,
-  `429`, `5xx` and timeouts.
+- Treat every upstream token or employee-call failure as one failed attempt:
+  token-endpoint timeouts, `401` after the one refresh, `403`, `404`, `409`
+  after the PUT fallback, `429`, `5xx` and timeouts.
 - Record `failed`, increment `attempts`, store a safe `lastError` and
   `lastAttemptAt`, keep the row, publish no event and return `502 ProblemDetails`.
 - Do not retry `429` or `5xx` automatically. Do not parse `Retry-After`.

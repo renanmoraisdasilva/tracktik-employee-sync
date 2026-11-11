@@ -116,7 +116,10 @@ Only `pending`, `synced` and `failed` exist.
   - caches the token and expiry;
   - refreshes 60 seconds before expiry;
   - uses `SemaphoreSlim` for single-flight refresh;
-  - invalidates on `401` and allows one retry.
+  - invalidates on `401` and allows one retry;
+  - wraps a token-endpoint timeout as `TrackTikException`, so it follows the
+    same failed-sync contract as an employee-call failure while caller
+    cancellation still propagates.
 - The token is never logged, stored in the database or sent to another host.
 
 ## 7. Event publishing

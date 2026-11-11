@@ -89,6 +89,10 @@ public sealed class TrackTikTokenProvider : ITrackTikTokenProvider
             _logger.LogInformation("Obtained a TrackTik access token; expires at {ExpiresAt}.", _expiresAt);
             return _cachedToken;
         }
+        catch (OperationCanceledException exception) when (!cancellationToken.IsCancellationRequested)
+        {
+            throw new TrackTikException("The TrackTik token request timed out.", exception);
+        }
         catch (OperationCanceledException)
         {
             throw;

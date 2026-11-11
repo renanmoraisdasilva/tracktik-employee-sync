@@ -143,6 +143,8 @@ The first commit is mandatory. A forward failure must not roll back the row.
 - Use a single-flight refresh so concurrent callers do not request multiple
   tokens.
 - On `401`, invalidate the token, refresh once and retry the employee call once.
+- A token-endpoint timeout or transport failure is a `TrackTikException`, so
+  FR-009 applies; caller cancellation is not converted into a sync failure.
 - Never log the client secret, access token or `Authorization` header.
 
 ### FR-007 — POST vs PUT

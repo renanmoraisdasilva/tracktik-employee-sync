@@ -60,6 +60,8 @@ dotnet test tests/EmployeeSync.Testcontainers
 | Token | Expiry skew reached | New token |
 | Token | 401 | Invalidate, refresh once, retry once |
 | Token | Concurrent callers | Single-flight refresh |
+| Token | Token endpoint timeout | `TrackTikException`, not an unhandled cancellation |
+| Token | Caller cancellation | `OperationCanceledException` propagates |
 
 ## 4. Integration test matrix
 
@@ -145,24 +147,24 @@ branches are:
 - sync success → `synced`, event;
 - sync failure → `failed`, 502, no event, row kept;
 - resubmission → same row, POST vs PUT;
-- token reuse/expiry/401;
+- token reuse/expiry/401, timeout vs caller cancellation;
 - unknown provider / missing employee → 404;
 - OpenAPI reachable.
 
 ### Current coverage snapshot
 
-Measured on `main` on 11 November 2026 from the **35 unit + 15 SQLite
+Measured on `main` on 11 November 2026 from the **37 unit + 15 SQLite
 integration tests**:
 
 | Scope | Line | Branch |
 |---|---:|---:|
-| Overall | **70.4%** (1,257 / 1,784) | **48.8%** (192 / 393) |
+| Overall | **70.5%** (1,260 / 1,787) | **48.8%** (192 / 393) |
 | Application | 91.5% | 79.4% |
 | Domain | 91.2% | 73.1% |
 | API | 49.7% | 33.9% |
-| Infrastructure | 69.9% | 63.3% |
+| Infrastructure | 70.0% | 63.3% |
 | Application + Domain | 91.4% | 77.7% |
-| Excluding generated OpenAPI and EF migrations | 85.4% | 70.6% |
+| Excluding generated OpenAPI and EF migrations | 85.5% | 70.6% |
 
 Method coverage is 87.3%; fully covered methods are 78.6%.
 
