@@ -44,6 +44,14 @@ public sealed class EmployeeApiTests : IClassFixture<ApiFactory>
         _factory.TrackTik.Created.ShouldContain(employee => employee.EmployeeId == "provider1-IT_001");
         _factory.Events.Events.ShouldContain(domainEvent => domainEvent.ProviderEmployeeId == id);
         CountRows("provider1", id).ShouldBe(1);
+
+        var stored = await _client.GetAsync($"/api/v1/employees/provider1/{id}");
+        stored.StatusCode.ShouldBe(HttpStatusCode.OK);
+
+        var storedBody = await stored.Content.ReadFromJsonAsync<EmployeeResponse>();
+        storedBody.ShouldNotBeNull();
+        storedBody.EmployeeId.ShouldBe("provider1-IT_001");
+        storedBody.SyncStatus.ShouldBe("synced");
     }
 
     [Fact]
@@ -69,6 +77,75 @@ public sealed class EmployeeApiTests : IClassFixture<ApiFactory>
         _factory.TrackTik.Created.Count(employee => employee.EmployeeId == "provider1-IT_002").ShouldBe(1);
         _factory.TrackTik.Updated.Count(employee => employee.EmployeeId == "provider1-IT_002").ShouldBe(1);
         CountRows("provider1", id).ShouldBe(1);
+        _factory.Events.Events.Count(
+            domainEvent => domainEvent.ProviderEmployeeId == id).ShouldBe(2);
+    }
+
+    [Fact]
+    public async Task Resubmit_after_failure_returns_200_uses_post_and_keeps_one_row()
+    {
+        const string id = "IT_006";
+        const string employeeId = "provider1-IT_006";
+        _factory.TrackTik.FailEmployeeIds.Add(employeeId);
+
+        var failed = await _client.PostAsync(
+            "/api/v1/providers/provider1/employees",
+            Provider1Payload(id));
+
+        failed.StatusCode.ShouldBe(HttpStatusCode.BadGateway);
+        CountRows("provider1", id).ShouldBe(1);
+        _factory.Events.Events.ShouldNotContain(
+            domainEvent => domainEvent.ProviderEmployeeId == id);
+
+        _factory.TrackTik.FailEmployeeIds.Remove(employeeId);
+
+        var retry = await _client.PostAsync(
+            "/api/v1/providers/provider1/employees",
+            Provider1Payload(id));
+
+        retry.StatusCode.ShouldBe(HttpStatusCode.OK);
+
+        var body = await retry.Content.ReadFromJsonAsync<EmployeeResponse>();
+        body.ShouldNotBeNull();
+        body.SyncStatus.ShouldBe("synced");
+        body.Attempts.ShouldBe(2);
+
+        _factory.TrackTik.Created.Count(
+            employee => employee.EmployeeId == employeeId).ShouldBe(1);
+        _factory.TrackTik.Updated.ShouldNotContain(
+            employee => employee.EmployeeId == employeeId);
+        CountRows("provider1", id).ShouldBe(1);
+        _factory.Events.Events.Count(
+            domainEvent => domainEvent.ProviderEmployeeId == id).ShouldBe(1);
+    }
+
+    [Fact]
+    public async Task Same_email_from_two_providers_creates_two_employees()
+    {
+        const string email = "shared.identity@example.com";
+
+        var provider1 = await _client.PostAsync(
+            "/api/v1/providers/provider1/employees",
+            Provider1Payload("IT_020", email: email));
+
+        var provider2 = await _client.PostAsync(
+            "/api/v1/providers/provider2/employees",
+            Provider2Payload("IT_021", email: email));
+
+        provider1.StatusCode.ShouldBe(HttpStatusCode.Created);
+        provider2.StatusCode.ShouldBe(HttpStatusCode.Created);
+
+        var first = await provider1.Content.ReadFromJsonAsync<EmployeeResponse>();
+        var second = await provider2.Content.ReadFromJsonAsync<EmployeeResponse>();
+
+        first.ShouldNotBeNull();
+        second.ShouldNotBeNull();
+        first.EmployeeId.ShouldBe("provider1-IT_020");
+        second.EmployeeId.ShouldBe("provider2-IT_021");
+        first.Email.ShouldBe(email);
+        second.Email.ShouldBe(email);
+        CountRows("provider1", "IT_020").ShouldBe(1);
+        CountRows("provider2", "IT_021").ShouldBe(1);
     }
 
     [Fact]
@@ -236,14 +313,15 @@ public sealed class EmployeeApiTests : IClassFixture<ApiFactory>
 
     private static JsonContent Provider1Payload(
         string id,
-        string? jobTitle = null)
+        string? jobTitle = null,
+        string? email = null)
     {
         var payload = new Dictionary<string, object?>
         {
             ["emp_id"] = id,
             ["first_name"] = "Test",
             ["last_name"] = "Employee",
-            ["email_address"] = $"{id.ToLowerInvariant()}@provider1.com",
+            ["email_address"] = email ?? $"{id.ToLowerInvariant()}@provider1.com",
             ["employment_status"] = "active"
         };
 
@@ -255,7 +333,7 @@ public sealed class EmployeeApiTests : IClassFixture<ApiFactory>
         return JsonContent.Create(payload);
     }
 
-    private static JsonContent Provider2Payload(string id) =>
+    private static JsonContent Provider2Payload(string id, string? email = null) =>
         JsonContent.Create(new Dictionary<string, object?>
         {
             ["employee_number"] = id,
@@ -263,7 +341,7 @@ public sealed class EmployeeApiTests : IClassFixture<ApiFactory>
             {
                 ["given_name"] = "Carol",
                 ["family_name"] = "Davis",
-                ["email"] = $"{id.ToLowerInvariant()}@provider2.com",
+                ["email"] = email ?? $"{id.ToLowerInvariant()}@provider2.com",
                 ["mobile"] = "+1-555-0201"
             },
             ["work_info"] = new Dictionary<string, object?>

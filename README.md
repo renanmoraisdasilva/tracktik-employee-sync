@@ -330,8 +330,9 @@ The default suite covers:
 - OpenAPI document reachable, with the `oneOf` provider bodies and
   `application/problem+json` errors asserted by a contract test.
 
-Testcontainers runs the integration tests against a real SQL Server container.
-The category is opt-in so `dotnet test` stays fast and portable.
+Testcontainers runs two focused tests: a real SQL Server POST/persistence test
+and a real NATS publish test. The category is opt-in so `dotnet test` stays fast
+and portable.
 
 CI runs restore, build, unit tests, the SQLite integration tests and a secret
 scan. Testcontainers tests remain local and opt-in; they are not part of the

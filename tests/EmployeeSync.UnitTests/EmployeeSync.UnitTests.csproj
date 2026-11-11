@@ -22,6 +22,12 @@
   </ItemGroup>
 
   <ItemGroup>
+    <None Update="Fixtures\*.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\..\src\EmployeeSync.Application\EmployeeSync.Application.csproj" />
     <ProjectReference Include="..\..\src\EmployeeSync.Domain\EmployeeSync.Domain.csproj" />
     <ProjectReference Include="..\..\src\EmployeeSync.Infrastructure\EmployeeSync.Infrastructure.csproj" />

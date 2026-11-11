@@ -1,0 +1,24 @@
+[
+  {
+    "emp_id": "P1_001",
+    "first_name": "Alice",
+    "last_name": "Johnson",
+    "email_address": "alice.johnson@provider1.com",
+    "phone": "+1-555-0101",
+    "job_title": "Security Officer",
+    "dept": "Security Operations",
+    "hire_date": "2024-01-15",
+    "employment_status": "active"
+  },
+  {
+    "emp_id": "P1_002",
+    "first_name": "Bob",
+    "last_name": "Smith",
+    "email_address": "bob.smith@provider1.com",
+    "phone": "+1-555-0102",
+    "job_title": "Supervisor",
+    "dept": "Security Operations",
+    "hire_date": "2023-11-20",
+    "employment_status": "active"
+  }
+]

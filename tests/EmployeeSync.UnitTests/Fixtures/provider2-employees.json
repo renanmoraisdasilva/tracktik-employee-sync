@@ -1,0 +1,32 @@
+[
+  {
+    "employee_number": "P2_001",
+    "personal_info": {
+      "given_name": "Carol",
+      "family_name": "Davis",
+      "email": "carol.davis@provider2.com",
+      "mobile": "+1-555-0201"
+    },
+    "work_info": {
+      "role": "Security Guard",
+      "division": "Night Shift Security",
+      "start_date": "2024-02-01",
+      "current_status": "employed"
+    }
+  },
+  {
+    "employee_number": "P2_002",
+    "personal_info": {
+      "given_name": "David",
+      "family_name": "Wilson",
+      "email": "david.wilson@provider2.com",
+      "mobile": "+1-555-0202"
+    },
+    "work_info": {
+      "role": "Team Lead",
+      "division": "Day Shift Security",
+      "start_date": "2023-12-15",
+      "current_status": "employed"
+    }
+  }
+]

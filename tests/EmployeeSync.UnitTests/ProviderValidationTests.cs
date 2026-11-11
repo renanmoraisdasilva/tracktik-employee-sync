@@ -34,6 +34,39 @@ public sealed class ProviderValidationTests
     }
 
     [Fact]
+    public async Task Provider1_rejects_a_missing_name()
+    {
+        var result = await Provider1.MapAsync(Parse("""
+            {
+              "emp_id": "P1_015",
+              "last_name": "Only",
+              "email_address": "no.name@provider1.com",
+              "employment_status": "active"
+            }
+            """), CancellationToken.None);
+
+        result.IsFailure.ShouldBeTrue();
+        result.Error!.Type.ShouldBe(ErrorType.Validation);
+    }
+
+    [Fact]
+    public async Task Provider1_rejects_an_invalid_email()
+    {
+        var result = await Provider1.MapAsync(Parse("""
+            {
+              "emp_id": "P1_016",
+              "first_name": "Bad",
+              "last_name": "Email",
+              "email_address": "not-an-email",
+              "employment_status": "active"
+            }
+            """), CancellationToken.None);
+
+        result.IsFailure.ShouldBeTrue();
+        result.Error!.Type.ShouldBe(ErrorType.Validation);
+    }
+
+    [Fact]
     public async Task Provider1_rejects_an_invalid_date()
     {
         var result = await Provider1.MapAsync(Parse("""

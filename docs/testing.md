@@ -13,7 +13,7 @@
 |---|---|---|
 | Unit | Mapping, validation, sync rules, token cache, event rules | Fast |
 | Integration (SQLite) | HTTP pipeline, DI, JSON, ProblemDetails, EF Core, persistence | Fast |
-| Integration (Testcontainers) | Real SQL Server migrations, constraints and queries | Slower; Docker |
+| Integration (Testcontainers) | Real SQL Server migration/persistence and real NATS publish | Slower; Docker |
 | Manual | Compose, real mock credentials, forced failure, reviewer path | Manual |
 
 ## 2. Commands
@@ -36,24 +36,25 @@ dotnet test tests/EmployeeSync.Testcontainers
 
 | Area | Scenario | Expected |
 |---|---|---|
-| Mapping | Provider 1 full sample | Matches the golden output |
+| Mapping | Both provider sample sets | Match `expected-tracktik-employees.json` |
+| Mapping | Provider 1 full sample | Matches the expected fields |
 | Mapping | Provider 1 optional fields missing | Optional fields null/omitted |
-| Mapping | Provider 2 full sample | Matches the golden output |
+| Mapping | Provider 2 full sample | Matches the expected fields |
 | Mapping | Provider 2 nested values | Correct flattening |
 | Status | `employed`, `on_leave`, `terminated` | `active`, `inactive`, `terminated` |
 | Identity | `provider1` + `P1_001` | `provider1-P1_001` |
-| Identity | Same email, different providers | Two identities |
 | Validation | Missing name/email/status | 400; message |
 | Validation | Invalid email/date/status | 400; message |
 | Validation | Extra field | Ignored |
-| Validation | Null optional field | Accepted |
+| Validation | Optional fields omitted | Accepted |
 | Sync | TrackTik success | `synced`, attempts++, error null |
 | Sync | TrackTik 500/timeout/429 | `failed`, attempts++, error recorded |
 | Sync | Flag false | POST |
 | Sync | Flag true | PUT |
 | Sync | Failed, never created | Retry POST |
 | Sync | Failed after create | Retry PUT |
-| Sync | TrackTik success + DB failure | Retry, then 500 + log |
+| Sync | TrackTik success + DB failure | Retry 3 times, then unexpected error |
+| Ordering | First success | Pending commit before TrackTik; event after synced commit |
 | Event | Successful sync | One `EmployeeSynced` after commit |
 | Event | Failed sync | No event |
 | Token | Two calls before expiry | One token request |
@@ -70,13 +71,19 @@ dotnet test tests/EmployeeSync.Testcontainers
 | First insert success | Valid Provider 1 POST; fake TrackTik 201 | 201, `Location`, `synced`, one row, event |
 | Update success | Same identity again; fake expects PUT | 200, same row, PUT, event |
 | TrackTik failure | Valid POST; fake 500 | 502, `application/problem+json`, `failed`, row kept, no event |
-| Resubmit after failure | Same identity; fake 201 | 200, same row, POST, `synced` |
+| Resubmit after failure | Same identity; fake 201 | 200, same row, POST, `synced`, one event |
+| Same email, different providers | POST both providers with the same email | Two rows and two TrackTik IDs; no merge |
 | Validation failure | Missing required field | 400, no row, fake TrackTik never called |
 | Unknown provider | POST `/providers/provider3/...` | 404 ProblemDetails, no row |
 | GET found | GET after success | 200, full response |
 | GET missing | GET unknown identity | 404 ProblemDetails |
 | OpenAPI | GET `/openapi/v1.json` | `oneOf` provider bodies, `application/json` success, `application/problem+json` errors, required fields |
+| Scalar | GET `/scalar/v1` | 200 HTML |
 | Report | GET report | 200, counts by status |
+
+Token-endpoint timeout is proven at the provider unit boundary. The API-level
+`502`/failed-row path is covered by the fake TrackTik failure test; the token
+HTTP client is not simulated through `WebApplicationFactory`.
 
 ## 5. `WebApplicationFactory`
 
@@ -85,13 +92,16 @@ dotnet test tests/EmployeeSync.Testcontainers
 - Replace the `DbContext` with SQLite in-memory.
 - Keep the SQLite connection open for the test lifetime; otherwise the database
   disappears when the connection closes.
-- Replace the TrackTik HTTP handler with a recording fake.
+- Replace `ITrackTikClient` with a recording fake.
 - Apply the committed migrations (preferred). `EnsureCreated` is acceptable only
   for the fast SQLite tests; Testcontainers always applies migrations.
 - Assert both the HTTP response and the database state.
 - Use a unique database name per test class.
 
-## 6. Fake TrackTik handler
+## 6. Fake TrackTik at each layer
+
+Unit tests for `TrackTikClient` use a recording `HttpMessageHandler`;
+integration tests replace `ITrackTikClient` with a fake.
 
 ```csharp
 public sealed class FakeTrackTikHandler : HttpMessageHandler
@@ -121,7 +131,9 @@ public sealed class FakeTrackTikHandler : HttpMessageHandler
 ## 7. Testcontainers
 
 - The opt-in `tests/EmployeeSync.Testcontainers` project uses `Testcontainers.MsSql`; its tests are tagged `Category=Testcontainers`.
-- They apply the real migrations and run the integration suite.
+- `Post_persists_and_syncs_against_real_sql_server` applies the real migrations and exercises the POST → SQL Server path.
+- `Publish_sends_the_event_to_the_configured_subject` publishes through `NatsEventPublisher` to a real NATS container.
+- These are **two focused tests**, not the whole integration suite.
 - Docker must be running.
 - They are excluded from the default `dotnet test` and from CI.
 - The README documents the command and the Docker requirement.
@@ -133,7 +145,8 @@ GitHub Actions on push/PR to `main`:
 1. `dotnet restore`
 2. `dotnet build --no-restore`
 3. `dotnet test tests/EmployeeSync.UnitTests --no-build`
-4. secret scan (gitleaks or equivalent)
+4. `dotnet test tests/EmployeeSync.IntegrationTests --no-build` (SQLite)
+5. secret scan (gitleaks or equivalent)
 
 The SQLite integration tests run in CI. No SQL Server, no Testcontainers and no
 real network. Testcontainers is local and opt-in.
@@ -153,18 +166,18 @@ branches are:
 
 ### Current coverage snapshot
 
-Measured on `main` on 11 November 2026 from the **37 unit + 16 SQLite
+Measured on `main` on 11 November 2026 from the **43 unit + 18 SQLite
 integration tests**:
 
 | Scope | Line | Branch |
 |---|---:|---:|
-| Overall | **73.0%** (1,437 / 1,968) | **49.3%** (201 / 407) |
-| Application | 91.5% | 79.4% |
+| Overall | **73.1%** (1,438 / 1,968) | **50.1%** (204 / 407) |
+| Application | 91.7% | 83.8% |
 | Domain | 91.2% | 73.1% |
 | API | 61.2% | 35.6% |
 | Infrastructure | 70.0% | 63.3% |
-| Application + Domain | 91.4% | 77.7% |
-| Excluding generated OpenAPI and EF migrations | 87.1% | 70.1% |
+| Application + Domain | 91.6% | 80.9% |
+| Excluding generated OpenAPI and EF migrations | 87.2% | 71.6% |
 
 Method coverage is 87.8%; fully covered methods are 78.7%.
 

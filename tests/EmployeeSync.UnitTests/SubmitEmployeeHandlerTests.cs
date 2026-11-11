@@ -61,6 +61,71 @@ public sealed class SubmitEmployeeHandlerTests
     }
 
     [Fact]
+    public async Task First_success_commits_pending_before_forward_and_event_after_commit()
+    {
+        var harness = new Harness();
+        var commits = new List<(SyncStatus Status, int Attempts)>();
+        (SyncStatus Status, int Attempts)? observedByTrackTik = null;
+        var eventSawSyncedCommit = false;
+
+        harness.Repository.TryAddAsync(
+                Arg.Any<Employee>(),
+                Arg.Any<CancellationToken>())
+            .Returns(call =>
+            {
+                var employee = call.Arg<Employee>();
+                harness.Capture(employee);
+                commits.Add((employee.SyncStatus, employee.Attempts));
+                return Task.FromResult(true);
+            });
+
+        harness.Repository.SaveChangesAsync(Arg.Any<CancellationToken>())
+            .Returns(_ =>
+            {
+                var employee = harness.Captured!;
+                commits.Add((employee.SyncStatus, employee.Attempts));
+                return Task.CompletedTask;
+            });
+
+        harness.TrackTik.CreateAsync(
+                Arg.Any<TrackTikEmployee>(),
+                Arg.Any<CancellationToken>())
+            .Returns(_ =>
+            {
+                var employee = harness.Captured!;
+                observedByTrackTik = (employee.SyncStatus, employee.Attempts);
+                return Task.CompletedTask;
+            });
+
+        harness.Publisher.PublishAsync(
+                Arg.Any<EmployeeSynced>(),
+                Arg.Any<CancellationToken>())
+            .Returns(_ =>
+            {
+                eventSawSyncedCommit = commits.Count == 2
+                    && commits[^1].Status == SyncStatus.Synced;
+                return Task.CompletedTask;
+            });
+
+        var result = await harness.Handler.HandleAsync(
+            new SubmitEmployeeCommand("provider1", Payload),
+            CancellationToken.None);
+
+        result.IsSuccess.ShouldBeTrue();
+        commits.Count.ShouldBe(2);
+        commits[0].Status.ShouldBe(SyncStatus.Pending);
+        commits[0].Attempts.ShouldBe(0);
+        commits[1].Status.ShouldBe(SyncStatus.Synced);
+        commits[1].Attempts.ShouldBe(1);
+
+        observedByTrackTik.ShouldNotBeNull();
+        observedByTrackTik!.Value.Status.ShouldBe(SyncStatus.Pending);
+        observedByTrackTik.Value.Attempts.ShouldBe(1);
+
+        eventSawSyncedCommit.ShouldBeTrue();
+    }
+
+    [Fact]
     public async Task TrackTik_failure_keeps_the_row_failed_and_publishes_no_event()
     {
         var harness = new Harness();
@@ -125,6 +190,41 @@ public sealed class SubmitEmployeeHandlerTests
             Arg.Any<Employee>(),
             Arg.Any<CancellationToken>());
         await harness.Repository.Received(2).SaveChangesAsync(Arg.Any<CancellationToken>());
+        await harness.Publisher.Received(1).PublishAsync(
+            Arg.Any<EmployeeSynced>(),
+            Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
+    public async Task Failed_resubmission_after_create_still_uses_put()
+    {
+        var harness = new Harness();
+        var existing = Employee.Create(
+            new EmployeeIdentity("provider1", "P1_001"),
+            Mapped,
+            harness.Clock.GetUtcNow());
+        existing.BeginAttempt(harness.Clock.GetUtcNow());
+        existing.MarkSynced(harness.Clock.GetUtcNow());
+        existing.BeginAttempt(harness.Clock.GetUtcNow());
+        existing.MarkFailed(harness.Clock.GetUtcNow(), "previous failure");
+
+        harness.Repository.FindAsync(
+                Arg.Any<EmployeeIdentity>(),
+                Arg.Any<CancellationToken>())
+            .Returns(existing);
+
+        var result = await harness.Handler.HandleAsync(
+            new SubmitEmployeeCommand("provider1", Payload),
+            CancellationToken.None);
+
+        result.IsSuccess.ShouldBeTrue();
+        result.Value.Employee.Attempts.ShouldBe(3);
+        await harness.TrackTik.Received(1).UpdateAsync(
+            Arg.Any<TrackTikEmployee>(),
+            Arg.Any<CancellationToken>());
+        await harness.TrackTik.DidNotReceive().CreateAsync(
+            Arg.Any<TrackTikEmployee>(),
+            Arg.Any<CancellationToken>());
     }
 
     [Fact]
@@ -269,6 +369,8 @@ public sealed class SubmitEmployeeHandlerTests
 
         result.IsFailure.ShouldBeTrue();
         result.Error!.Type.ShouldBe(ErrorType.Unexpected);
+        await harness.Repository.Received(3).SaveChangesAsync(
+            Arg.Any<CancellationToken>());
     }
 
     private sealed class Harness
@@ -330,5 +432,7 @@ public sealed class SubmitEmployeeHandlerTests
         public SubmitEmployeeHandler Handler { get; }
 
         public Employee? Captured { get; private set; }
+
+        public void Capture(Employee employee) => Captured = employee;
     }
 }

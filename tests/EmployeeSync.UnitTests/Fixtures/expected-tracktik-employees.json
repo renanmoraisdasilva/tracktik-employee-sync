@@ -1,0 +1,46 @@
+[
+  {
+    "employeeId": "provider1-P1_001",
+    "firstName": "Alice",
+    "lastName": "Johnson",
+    "email": "alice.johnson@provider1.com",
+    "phoneNumber": "+1-555-0101",
+    "position": "Security Officer",
+    "department": "Security Operations",
+    "startDate": "2024-01-15",
+    "status": "active"
+  },
+  {
+    "employeeId": "provider1-P1_002",
+    "firstName": "Bob",
+    "lastName": "Smith",
+    "email": "bob.smith@provider1.com",
+    "phoneNumber": "+1-555-0102",
+    "position": "Supervisor",
+    "department": "Security Operations",
+    "startDate": "2023-11-20",
+    "status": "active"
+  },
+  {
+    "employeeId": "provider2-P2_001",
+    "firstName": "Carol",
+    "lastName": "Davis",
+    "email": "carol.davis@provider2.com",
+    "phoneNumber": "+1-555-0201",
+    "position": "Security Guard",
+    "department": "Night Shift Security",
+    "startDate": "2024-02-01",
+    "status": "active"
+  },
+  {
+    "employeeId": "provider2-P2_002",
+    "firstName": "David",
+    "lastName": "Wilson",
+    "email": "david.wilson@provider2.com",
+    "phoneNumber": "+1-555-0202",
+    "position": "Team Lead",
+    "department": "Day Shift Security",
+    "startDate": "2023-12-15",
+    "status": "active"
+  }
+]

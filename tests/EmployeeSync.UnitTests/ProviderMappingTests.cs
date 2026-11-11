@@ -101,6 +101,27 @@ public sealed class ProviderMappingTests
     }
 
     [Fact]
+    public async Task Provider2_maps_terminated_to_terminated()
+    {
+        var result = await Provider2.MapAsync(Parse("""
+            {
+              "employee_number": "P2_003",
+              "personal_info": {
+                "given_name": "Eve",
+                "family_name": "Taylor",
+                "email": "eve.taylor@provider2.com"
+              },
+              "work_info": {
+                "current_status": "terminated"
+              }
+            }
+            """), CancellationToken.None);
+
+        result.IsSuccess.ShouldBeTrue();
+        result.Value.Status.ShouldBe(EmployeeStatus.Terminated);
+    }
+
+    [Fact]
     public async Task Provider1_keeps_optional_fields_optional()
     {
         var result = await Provider1.MapAsync(Parse("""

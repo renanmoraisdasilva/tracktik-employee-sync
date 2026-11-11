@@ -1,3 +1,4 @@
+using System.Net;
 using System.Text.Json;
 using Shouldly;
 
@@ -18,6 +19,9 @@ public sealed class OpenApiContractTests : IClassFixture<ApiFactory>
     {
         var response = await _client.GetAsync("/openapi/v1.json");
         response.EnsureSuccessStatusCode();
+
+        var scalar = await _client.GetAsync("/scalar/v1");
+        scalar.StatusCode.ShouldBe(HttpStatusCode.OK);
 
         using var document = JsonDocument.Parse(
             await response.Content.ReadAsStringAsync());
