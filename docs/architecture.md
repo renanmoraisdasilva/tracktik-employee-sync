@@ -181,7 +181,9 @@ flowchart TB
   mock is stateless, so this is not observable there.
 - Last-write-wins concurrency; a lost update is possible under extreme
   concurrency.
-- No auth, rate limiting, automatic retries or OpenTelemetry in v1.
+- No inbound API authentication or rate limiting, no automatic retries and no
+  OpenTelemetry in v1. TrackTik's own rate limit (`429`) is treated as one failed
+  attempt; see [ADR-008](decisions/ADR-008-upstream-failures.md).
 
 ## 12. ADRs
 
@@ -192,3 +194,5 @@ flowchart TB
 - [ADR-005](decisions/ADR-005-validation-mapping-errors.md) — validation/mapping.
 - [ADR-006](decisions/ADR-006-testing-and-ci.md) — testing and CI.
 - [ADR-007](decisions/ADR-007-bonus-scope.md) — bonus scope.
+- [ADR-008](decisions/ADR-008-upstream-failures.md) — upstream failure and
+  rate-limit policy.

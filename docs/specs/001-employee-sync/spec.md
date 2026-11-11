@@ -47,7 +47,8 @@ features.
 - Merging employees across providers by email.
 - Exactly-once event delivery in v1 (an outbox is a documented stretch goal).
 - Automatic retries of TrackTik 5xx/429 (resubmission is the retry mechanism).
-- Production-grade observability, rate limiting or secret management.
+- Production-grade observability, inbound API rate limiting or secret
+  management.
 - A public API for providers other than `provider1` and `provider2`.
 
 ## 4. Actors

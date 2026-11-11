@@ -466,7 +466,8 @@ An outbox is documented as a stretch goal, not implemented in v1.
 - Reconcile the "TrackTik succeeded but the status update failed" case with an
   idempotency key or a scheduled reconciliation job.
 - Add authentication and per-tenant authorisation for provider endpoints.
-- Add rate limiting and a resilience policy for 429/5xx.
+- Add inbound rate limiting for provider callers and an outbound resilience
+  policy (backoff and `Retry-After`) for TrackTik 429/5xx.
 - Add OpenTelemetry tracing and metrics.
 - Add integration/Testcontainers tests to CI with a SQL Server service container.
 - Add a `SyncAttempts` table for auditability.
