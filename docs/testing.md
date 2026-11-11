@@ -149,6 +149,37 @@ branches are:
 - unknown provider / missing employee → 404;
 - OpenAPI reachable.
 
+### Current coverage snapshot
+
+Measured on `main` on 11 November 2026 from the **35 unit + 15 SQLite
+integration tests**:
+
+| Scope | Line | Branch |
+|---|---:|---:|
+| Overall | **70.4%** (1,257 / 1,784) | **48.8%** (192 / 393) |
+| Application | 91.5% | 79.4% |
+| Domain | 91.2% | 73.1% |
+| API | 49.7% | 33.9% |
+| Infrastructure | 69.9% | 63.3% |
+| Application + Domain | 91.4% | 77.7% |
+| Excluding generated OpenAPI and EF migrations | 85.4% | 70.6% |
+
+Method coverage is 87.3%; fully covered methods are 78.6%.
+
+The raw number is dragged down by generated OpenAPI code and EF migrations.
+The NATS publisher is covered by the separate Testcontainers test, not by this
+solution coverage run. The two Testcontainers tests are also not included.
+
+Commands:
+
+```bash
+dotnet test EmployeeSync.sln --collect:"XPlat Code Coverage" --results-directory TestResults/Coverage
+reportgenerator \
+  "-reports:TestResults/Coverage/**/coverage.cobertura.xml" \
+  "-targetdir:TestResults/CoverageReport" \
+  "-reporttypes:TextSummary;Html"
+```
+
 ## 10. Definition of done
 
 - `dotnet test` passes without Docker.

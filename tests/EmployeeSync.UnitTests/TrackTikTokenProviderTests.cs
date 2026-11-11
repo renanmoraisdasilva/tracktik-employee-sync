@@ -70,6 +70,48 @@ public sealed class TrackTikTokenProviderTests
     }
 
     [Fact]
+    public async Task Invalid_json_response_is_a_tracktik_exception()
+    {
+        var handler = new TokenHandler { BodyOverride = "not-json" };
+        var clock = new FakeTimeProvider(
+            new DateTimeOffset(2026, 11, 11, 12, 0, 0, TimeSpan.Zero));
+        var provider = CreateProvider(handler, clock);
+
+        var exception = await Should.ThrowAsync<TrackTikException>(
+            () => provider.GetTokenAsync(CancellationToken.None));
+
+        exception.SafeMessage.ShouldContain("invalid");
+    }
+
+    [Fact]
+    public async Task Response_without_an_access_token_is_a_tracktik_exception()
+    {
+        var handler = new TokenHandler { BodyOverride = "{\"expires_in\":3600}" };
+        var clock = new FakeTimeProvider(
+            new DateTimeOffset(2026, 11, 11, 12, 0, 0, TimeSpan.Zero));
+        var provider = CreateProvider(handler, clock);
+
+        var exception = await Should.ThrowAsync<TrackTikException>(
+            () => provider.GetTokenAsync(CancellationToken.None));
+
+        exception.SafeMessage.ShouldContain("empty access token");
+    }
+
+    [Fact]
+    public async Task Configured_scope_is_sent_in_the_token_request()
+    {
+        var handler = new TokenHandler();
+        var clock = new FakeTimeProvider(
+            new DateTimeOffset(2026, 11, 11, 12, 0, 0, TimeSpan.Zero));
+        var provider = CreateProvider(handler, clock, "employees:read");
+
+        await provider.GetTokenAsync(CancellationToken.None);
+
+        handler.LastBody.ShouldNotBeNull();
+        handler.LastBody.ShouldContain("scope=employees%3Aread");
+    }
+
+    [Fact]
     public async Task Token_endpoint_failure_is_a_tracktik_exception()
     {
         var handler = new TokenHandler { Fail = true };
@@ -85,7 +127,8 @@ public sealed class TrackTikTokenProviderTests
 
     private static TrackTikTokenProvider CreateProvider(
         TokenHandler handler,
-        FakeTimeProvider clock)
+        FakeTimeProvider clock,
+        string? scope = null)
     {
         var factory = Substitute.For<IHttpClientFactory>();
         factory.CreateClient("TrackTikToken").Returns(_ => new HttpClient(handler));
@@ -98,6 +141,7 @@ public sealed class TrackTikTokenProviderTests
                 TokenUrl = "https://tracktik.example/oauth/token",
                 ClientId = "test-client",
                 ClientSecret = "test-secret",
+                Scope = scope,
                 TimeoutSeconds = 15
             }),
             clock,
@@ -111,6 +155,8 @@ public sealed class TrackTikTokenProviderTests
         public string? LastBody { get; private set; }
 
         public bool Fail { get; init; }
+
+        public string? BodyOverride { get; init; }
 
         protected override async Task<HttpResponseMessage> SendAsync(
             HttpRequestMessage request,
@@ -126,6 +172,14 @@ public sealed class TrackTikTokenProviderTests
                 return new HttpResponseMessage(HttpStatusCode.InternalServerError)
                 {
                     Content = new StringContent("upstream error")
+                };
+            }
+
+            if (BodyOverride is not null)
+            {
+                return new HttpResponseMessage(HttpStatusCode.OK)
+                {
+                    Content = new StringContent(BodyOverride, Encoding.UTF8, "application/json")
                 };
             }
 

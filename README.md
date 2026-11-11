@@ -336,6 +336,8 @@ CI runs restore, build, unit tests, the SQLite integration tests and a secret
 scan. Testcontainers tests remain local and opt-in; they are not part of the
 default CI job.
 
+Coverage snapshot and caveats: [docs/testing.md](docs/testing.md#9-coverage-philosophy).
+
 ---
 
 ## Migrations
