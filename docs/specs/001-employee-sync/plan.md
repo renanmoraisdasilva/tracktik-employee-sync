@@ -27,7 +27,7 @@
 | Events | In-memory publisher by default; NATS in Compose |
 | API docs | Built-in OpenAPI + Scalar |
 | Containers | Docker Compose: API + SQL Server + NATS |
-| CI | GitHub Actions: restore, build, unit tests, secret scan |
+| CI | GitHub Actions: restore, build, unit tests, SQLite integration tests, secret scan |
 
 ## 2. Constraints
 
@@ -223,7 +223,7 @@ committed, and the submission is ready.
 | Event publish fails | Missing event | Log; outbox stretch |
 | Too many bonus items | Mandatory quality slips | Gated order; drop NATS first |
 | Testcontainers needs Docker | `dotnet test` fails | Opt-in project |
-| CI cannot run integration tests | Red build | CI runs build + unit + secret scan |
+| CI cannot run SQL Server tests | Red build | CI runs build + unit + SQLite integration + secret scan; Testcontainers stays opt-in |
 | Secret committed | Public exposure | `.gitignore`, user-secrets, secret scan |
 | Scope creep (auth, outbox, OTel) | Deadline risk | Explicitly out of scope |
 

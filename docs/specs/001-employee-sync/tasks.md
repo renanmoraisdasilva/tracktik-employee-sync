@@ -1,129 +1,132 @@
 # 001 — Employee Sync Task Breakdown
 
-- **Status:** Accepted
+- **Status:** Implemented; challenge submission pending
 - **Spec:** [`spec.md`](spec.md)
 - **Plan:** [`plan.md`](plan.md)
 - **Rule:** one task at a time; keep the build and tests green; commit in
   one-line messages.
 
+> Every task below is complete except **T-087** (send the challenge submission),
+> which remains open. The checkboxes record implementation, not planned work.
+
 ---
 
 ## Phase 0 — Repository and skeleton
 
-- [ ] **T-001** Create the repository `tracktik-employee-sync`, add the
+- [x] **T-001** Create the repository `tracktik-employee-sync`, add the
   `.gitignore`, `.editorconfig`, `global.json` and `Directory.Build.props`.
-- [ ] **T-002** Create `EmployeeSync.sln` and the six projects.
-- [ ] **T-003** Add the project references in the allowed direction.
-- [ ] **T-004** Add `Dockerfile`, `docker-compose.yml` and `.env.example`.
-- [ ] **T-005** Add `appsettings.json` placeholders and the options classes.
-- [ ] **T-006** Add `/health`, OpenAPI and Scalar.
-- [ ] **T-007** Verify `docker compose up --build` starts the API and SQL Server.
-- [ ] **T-008** Add the `docs/` skeleton and `AGENTS.md`.
+- [x] **T-002** Create `EmployeeSync.sln` and the six projects.
+- [x] **T-003** Add the project references in the allowed direction.
+- [x] **T-004** Add `Dockerfile`, `docker-compose.yml` and `.env.example`.
+- [x] **T-005** Add `appsettings.json` placeholders and the options classes.
+- [x] **T-006** Add `/health`, OpenAPI and Scalar.
+- [x] **T-007** Verify `docker compose up --build` starts the API and SQL Server.
+- [x] **T-008** Add the `docs/` skeleton and `AGENTS.md`.
 
 ## Phase 1 — Domain and database
 
-- [ ] **T-010** Add `Employee`, `EmployeeIdentity`, `SyncStatus`,
+- [x] **T-010** Add `Employee`, `EmployeeIdentity`, `SyncStatus`,
   `EmployeeStatus` and `EmployeeSynced`.
-- [ ] **T-011** Add `AppDbContext` and the `Employees` entity configuration.
-- [ ] **T-012** Add the unique index and check constraints.
-- [ ] **T-013** Add `IEmployeeRepository` and the EF Core implementation.
-- [ ] **T-014** Add the initial migration and apply it to a clean database.
-- [ ] **T-015** Add the startup migration path with retry and the
+- [x] **T-011** Add `AppDbContext` and the `Employees` entity configuration.
+- [x] **T-012** Add the unique index and check constraints.
+- [x] **T-013** Add `IEmployeeRepository` and the EF Core implementation.
+- [x] **T-014** Add the initial migration and apply it to a clean database.
+- [x] **T-015** Add the startup migration path with retry and the
   `Database__AutoMigrate` flag.
-- [ ] **T-016** Add a test that the unique index rejects a duplicate identity.
+- [x] **T-016** Add a test that the unique index rejects a duplicate identity.
 
 ## Phase 2 — Providers, validation and mapping
 
-- [ ] **T-020** Add the Provider 1 and Provider 2 request DTOs.
-- [ ] **T-021** Add `Provider1EmployeeValidator`.
-- [ ] **T-022** Add `Provider2EmployeeValidator`.
-- [ ] **T-023** Add the outbound `TrackTikEmployeeValidator`.
-- [ ] **T-024** Add `Provider1Mapper` and `Provider2Mapper`.
-- [ ] **T-025** Add `IProviderAdapter` and the provider factory.
-- [ ] **T-026** Add the golden mapping tests for both providers.
-- [ ] **T-027** Add validation tests for missing fields, invalid email, bad date,
+- [x] **T-020** Add the Provider 1 and Provider 2 request DTOs.
+- [x] **T-021** Add `Provider1EmployeeValidator`.
+- [x] **T-022** Add `Provider2EmployeeValidator`.
+- [x] **T-023** Add the outbound `TrackTikEmployeeValidator`.
+- [x] **T-024** Add `Provider1Mapper` and `Provider2Mapper`.
+- [x] **T-025** Add `IProviderAdapter` and the provider factory.
+- [x] **T-026** Add the golden mapping tests for both providers.
+- [x] **T-027** Add validation tests for missing fields, invalid email, bad date,
   unknown status, extra fields and null optional fields.
-- [ ] **T-028** Add the status-mapping tests.
+- [x] **T-028** Add the status-mapping tests.
 
 ## Phase 3 — API, CQRS and error model
 
-- [ ] **T-030** Add `Result` / `Result<T>` and the error codes.
-- [ ] **T-031** Add `SubmitEmployeeCommand` and the handler.
-- [ ] **T-032** Add `GetEmployeeQuery` and the handler.
-- [ ] **T-033** Add `EmployeesController` with the POST and GET routes.
-- [ ] **T-034** Add 201 first insert with `Location`, 200 on resubmission.
-- [ ] **T-035** Add `ResultExtensions` for `ProblemDetails` and
+- [x] **T-030** Add `Result` / `Result<T>` and the error codes.
+- [x] **T-031** Add `SubmitEmployeeCommand` and the handler.
+- [x] **T-032** Add `GetEmployeeQuery` and the handler.
+- [x] **T-033** Add `EmployeesController` with the POST and GET routes.
+- [x] **T-034** Add 201 first insert with `Location`, 200 on resubmission.
+- [x] **T-035** Add `ResultExtensions` for `ProblemDetails` and
   `ValidationProblemDetails`.
-- [ ] **T-036** Wire FluentValidation and automatic 400s.
-- [ ] **T-037** Add OpenAPI metadata and examples.
-- [ ] **T-038** Add the report query handler and endpoint.
-- [ ] **T-039** Add tests for 201/200, 400, 404 and the GET shape.
+- [x] **T-036** Wire FluentValidation and automatic 400s.
+- [x] **T-037** Add OpenAPI metadata and examples.
+- [x] **T-038** Add the report query handler and endpoint.
+- [x] **T-039** Add tests for 201/200, 400, 404 and the GET shape.
 
 ## Phase 4 — TrackTik client and sync
 
-- [ ] **T-040** Add `TrackTikOptions` and the typed `TrackTikClient`.
-- [ ] **T-041** Add `ITrackTikTokenProvider` with cache, expiry skew,
+- [x] **T-040** Add `TrackTikOptions` and the typed `TrackTikClient`.
+- [x] **T-041** Add `ITrackTikTokenProvider` with cache, expiry skew,
   single-flight refresh and 401 invalidation.
-- [ ] **T-042** Implement the sync orchestration:
+- [x] **T-042** Implement the sync orchestration:
   validate → map → pending → token → POST/PUT → synced/failed.
-- [ ] **T-043** Add `ExistsInTrackTik` handling and the POST/PUT decision.
-- [ ] **T-044** Add the 502 `ProblemDetails` with the sync fields.
-- [ ] **T-045** Add a fake `HttpMessageHandler` and request recording.
-- [ ] **T-046** Add sync tests: success, 500, timeout, 401, 429, retry, token
+- [x] **T-043** Add `ExistsInTrackTik` handling and the POST/PUT decision.
+- [x] **T-044** Add the 502 `ProblemDetails` with the sync fields.
+- [x] **T-045** Add a fake `HttpMessageHandler` and request recording.
+- [x] **T-046** Add sync tests: success, 500, timeout, 401, 429, retry, token
   reuse and POST/PUT.
-- [ ] **T-047** Add a test that a failed forward keeps the row and does not
+- [x] **T-047** Add a test that a failed forward keeps the row and does not
   roll back.
-- [ ] **T-048** Add a test that TrackTik success + DB update failure returns 500
+- [x] **T-048** Add a test that TrackTik success + DB update failure returns 500
   and logs.
 
 ## Phase 5 — Event publishing and NATS
 
-- [ ] **T-050** Add `IEventPublisher` and `InMemoryEventPublisher`.
-- [ ] **T-051** Add `NatsEventPublisher` and `NatsOptions`.
-- [ ] **T-052** Add the NATS service to Compose and `Events__Mode=Nats` for the
+- [x] **T-050** Add `IEventPublisher` and `InMemoryEventPublisher`.
+- [x] **T-051** Add `NatsEventPublisher` and `NatsOptions`.
+- [x] **T-052** Add the NATS service to Compose and `Events__Mode=Nats` for the
   API container.
-- [ ] **T-053** Publish `EmployeeSynced` only after the `synced` commit.
-- [ ] **T-054** Add the event payload with identifiers and metadata, no full PII.
-- [ ] **T-055** Log publisher failures and keep the request successful.
-- [ ] **T-056** Add tests for event-on-success and no-event-on-failure.
-- [ ] **T-057** Document the NATS subject and the in-memory fallback.
+- [x] **T-053** Publish `EmployeeSynced` only after the `synced` commit.
+- [x] **T-054** Add the event payload with identifiers and metadata, no full PII.
+- [x] **T-055** Log publisher failures and keep the request successful.
+- [x] **T-056** Add tests for event-on-success and no-event-on-failure.
+- [x] **T-057** Document the NATS subject and the in-memory fallback.
 
 ## Phase 6 — Test suite
 
-- [ ] **T-060** Add the unit test project references and test helpers.
-- [ ] **T-061** Add the integration test host with `WebApplicationFactory`.
-- [ ] **T-062** Replace the DbContext with SQLite in-memory for the default
+- [x] **T-060** Add the unit test project references and test helpers.
+- [x] **T-061** Add the integration test host with `WebApplicationFactory`.
+- [x] **T-062** Replace the DbContext with SQLite in-memory for the default
   integration tests.
-- [ ] **T-063** Add the integration tests: 201/200, 400, 404, 502, resubmission,
+- [x] **T-063** Add the integration tests: 201/200, 400, 404, 502, resubmission,
   PUT after create, GET and OpenAPI.
-- [ ] **T-064** Add the `tests/EmployeeSync.Testcontainers` SQL Server tests
+- [x] **T-064** Add the `tests/EmployeeSync.Testcontainers` SQL Server tests
   (tagged `Category=Testcontainers`).
-- [ ] **T-065** Document the test commands and the Docker requirement.
-- [ ] **T-066** Run the full suite from a clean clone.
+- [x] **T-065** Document the test commands and the Docker requirement.
+- [x] **T-066** Run the full suite from a clean clone.
 
 ## Phase 7 — Bonus report, docs and CI
 
-- [ ] **T-070** Add `db/reports/employee-counts-by-sync-status.sql`.
-- [ ] **T-071** Add the report endpoint and test.
-- [ ] **T-072** Finish the OpenAPI document and the Scalar UI.
-- [ ] **T-073** Write the README with the reviewer-first structure.
-- [ ] **T-074** Write `docs/architecture.md` and `docs/testing.md`.
-- [ ] **T-075** Write the ADRs and link them from the README.
-- [ ] **T-076** Add the GitHub Actions workflow: restore, build, unit tests,
+- [x] **T-070** Add `db/reports/employee-counts-by-sync-status.sql`.
+- [x] **T-071** Add the report endpoint and test.
+- [x] **T-072** Finish the OpenAPI document and the Scalar UI.
+- [x] **T-073** Write the README with the reviewer-first structure.
+- [x] **T-074** Write `docs/architecture.md` and `docs/testing.md`.
+- [x] **T-075** Write the ADRs and link them from the README.
+- [x] **T-076** Add the GitHub Actions workflow: restore, build, unit tests,
   secret scan.
-- [ ] **T-077** Add `.env.example`, user-secrets instructions and migration
+- [x] **T-077** Add `.env.example`, user-secrets instructions and migration
   commands.
-- [ ] **T-078** Run the secret scan and inspect the git history.
+- [x] **T-078** Run the secret scan and inspect the git history.
 
 ## Phase 8 — Polish and optional outbox
 
-- [ ] **T-080** Run the manual Compose flow with both provider samples.
-- [ ] **T-081** Force a TrackTik 500 and verify the 502, failed row and no event.
-- [ ] **T-082** Resubmit and verify 200, same row and PUT after create.
-- [ ] **T-083** Verify the report endpoint and the OpenAPI/Scalar pages.
-- [ ] **T-084** Fresh-clone the repository and follow the README.
-- [ ] **T-085** Check CI is green.
-- [ ] **T-086** If all four bonus items and CI are green, consider the outbox
+- [x] **T-080** Run the manual Compose flow with both provider samples.
+- [x] **T-081** Force a TrackTik 500 and verify the 502, failed row and no event.
+- [x] **T-082** Resubmit and verify 200, same row and PUT after create.
+- [x] **T-083** Verify the report endpoint and the OpenAPI/Scalar pages.
+- [x] **T-084** Fresh-clone the repository and follow the README.
+- [x] **T-085** Check CI is green.
+- [x] **T-086** If all four bonus items and CI are green, consider the outbox
   stretch; otherwise document it as next step.
 - [ ] **T-087** Prepare the submission payload and send it.
 
