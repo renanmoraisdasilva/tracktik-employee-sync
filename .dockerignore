@@ -1,0 +1,14 @@
+**/bin/
+**/obj/
+**/TestResults/
+.git/
+.vs/
+.idea/
+tests/
+docs/
+db/
+*.md
+.env
+.env.*
+!.env.example
+oauth-credentials.json
