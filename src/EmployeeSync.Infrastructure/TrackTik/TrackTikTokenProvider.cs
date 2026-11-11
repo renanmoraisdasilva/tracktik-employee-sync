@@ -105,6 +105,10 @@ public sealed class TrackTikTokenProvider : ITrackTikTokenProvider
         {
             throw new TrackTikException("The TrackTik token response was invalid.", exception);
         }
+        catch (NotSupportedException exception)
+        {
+            throw new TrackTikException("The TrackTik token response was invalid.", exception);
+        }
         finally
         {
             _refreshLock.Release();

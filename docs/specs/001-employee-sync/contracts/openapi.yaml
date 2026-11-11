@@ -1,4 +1,4 @@
-openapi: 3.0.3
+openapi: 3.1.1
 info:
   title: TrackTik Employee Sync Service
   version: 1.0.0
@@ -275,21 +275,17 @@ components:
           format: email
           example: alice.johnson@provider1.com
         phone:
-          type: string
-          nullable: true
+          type: [string, "null"]
           example: "+1-555-0101"
         job_title:
-          type: string
-          nullable: true
+          type: [string, "null"]
           example: Security Officer
         dept:
-          type: string
-          nullable: true
+          type: [string, "null"]
           example: Security Operations
         hire_date:
-          type: string
+          type: [string, "null"]
           format: date
-          nullable: true
           example: "2024-01-15"
         employment_status:
           type: string
@@ -324,8 +320,7 @@ components:
           format: email
           example: carol.davis@provider2.com
         mobile:
-          type: string
-          nullable: true
+          type: [string, "null"]
           example: "+1-555-0201"
 
     WorkInfo:
@@ -333,17 +328,14 @@ components:
       required: [current_status]
       properties:
         role:
-          type: string
-          nullable: true
+          type: [string, "null"]
           example: Security Guard
         division:
-          type: string
-          nullable: true
+          type: [string, "null"]
           example: Night Shift Security
         start_date:
-          type: string
+          type: [string, "null"]
           format: date
-          nullable: true
           example: "2024-02-01"
         current_status:
           type: string
@@ -387,21 +379,17 @@ components:
           format: email
           example: alice.johnson@provider1.com
         phoneNumber:
-          type: string
-          nullable: true
+          type: [string, "null"]
           example: "+1-555-0101"
         position:
-          type: string
-          nullable: true
+          type: [string, "null"]
           example: Security Officer
         department:
-          type: string
-          nullable: true
+          type: [string, "null"]
           example: Security Operations
         startDate:
-          type: string
+          type: [string, "null"]
           format: date
-          nullable: true
           example: "2024-01-15"
         status:
           type: string
@@ -417,13 +405,11 @@ components:
           minimum: 0
           example: 1
         lastError:
-          type: string
-          nullable: true
+          type: [string, "null"]
           example: null
         lastAttemptAt:
-          type: string
+          type: [string, "null"]
           format: date-time
-          nullable: true
           example: "2026-11-11T14:03:22Z"
         createdAt:
           type: string
@@ -439,23 +425,18 @@ components:
       description: RFC 9457 problem details, with optional sync extensions.
       properties:
         type:
-          type: string
+          type: [string, "null"]
           format: uri
-          nullable: true
         title:
-          type: string
-          nullable: true
+          type: [string, "null"]
         status:
-          type: integer
+          type: [integer, "null"]
           format: int32
-          nullable: true
         detail:
-          type: string
-          nullable: true
+          type: [string, "null"]
         instance:
-          type: string
+          type: [string, "null"]
           format: uri
-          nullable: true
         syncStatus:
           type: string
           enum: [pending, synced, failed]
@@ -465,13 +446,11 @@ components:
           format: int32
           description: Present on a 502 after a failed sync.
         lastError:
-          type: string
-          nullable: true
+          type: [string, "null"]
           description: Present on a 502 after a failed sync.
         lastAttemptAt:
-          type: string
+          type: [string, "null"]
           format: date-time
-          nullable: true
           description: Present on a 502 after a failed sync.
       additionalProperties: true
 

@@ -112,6 +112,20 @@ public sealed class TrackTikTokenProviderTests
     }
 
     [Fact]
+    public async Task Unsupported_token_content_read_is_a_tracktik_exception()
+    {
+        var handler = new TokenHandler { UnsupportedContent = true };
+        var clock = new FakeTimeProvider(
+            new DateTimeOffset(2026, 11, 11, 12, 0, 0, TimeSpan.Zero));
+        var provider = CreateProvider(handler, clock);
+
+        var exception = await Should.ThrowAsync<TrackTikException>(
+            () => provider.GetTokenAsync(CancellationToken.None));
+
+        exception.SafeMessage.ShouldContain("invalid");
+    }
+
+    [Fact]
     public async Task Token_endpoint_timeout_is_a_tracktik_exception()
     {
         var handler = new TokenHandler { SimulateTimeout = true };
@@ -186,6 +200,8 @@ public sealed class TrackTikTokenProviderTests
 
         public string? BodyOverride { get; init; }
 
+        public bool UnsupportedContent { get; init; }
+
         public bool SimulateTimeout { get; init; }
 
         protected override async Task<HttpResponseMessage> SendAsync(
@@ -212,6 +228,14 @@ public sealed class TrackTikTokenProviderTests
                 };
             }
 
+            if (UnsupportedContent)
+            {
+                return new HttpResponseMessage(HttpStatusCode.OK)
+                {
+                    Content = new UnsupportedContentResponse()
+                };
+            }
+
             if (BodyOverride is not null)
             {
                 return new HttpResponseMessage(HttpStatusCode.OK)
@@ -227,6 +251,27 @@ public sealed class TrackTikTokenProviderTests
             {
                 Content = new StringContent(json, Encoding.UTF8, "application/json")
             };
+        }
+
+        private sealed class UnsupportedContentResponse : HttpContent
+        {
+            public UnsupportedContentResponse()
+            {
+                Headers.ContentType =
+                    new System.Net.Http.Headers.MediaTypeHeaderValue("text/plain");
+            }
+
+            protected override Task SerializeToStreamAsync(
+                Stream stream,
+                System.Net.TransportContext? context) =>
+                throw new NotSupportedException(
+                    "The token response content type is not supported.");
+
+            protected override bool TryComputeLength(out long length)
+            {
+                length = 0;
+                return false;
+            }
         }
     }
 }

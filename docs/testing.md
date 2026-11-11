@@ -63,6 +63,7 @@ dotnet test tests/EmployeeSync.Testcontainers
 | Token | 401 | Invalidate, refresh once, retry once |
 | Token | Concurrent callers | Single-flight refresh |
 | Token | Token endpoint timeout | `TrackTikException`, not an unhandled cancellation |
+| Token | Unsupported token content read | `TrackTikException`, not `NotSupportedException` |
 | Token | Caller cancellation | `OperationCanceledException` propagates |
 
 ## 4. Integration test matrix
@@ -172,16 +173,16 @@ branches are:
 
 ### Current coverage snapshot
 
-Measured on `main` on 11 November 2026 from the **44 unit + 19 SQLite
+Measured on `main` on 11 November 2026 from the **45 unit + 19 SQLite
 integration tests**:
 
 | Scope | Line | Branch |
 |---|---:|---:|
-| Overall | **73.4%** (1,558 / 2,121) | **48.3%** (199 / 412) |
+| Overall | **73.4%** (1,561 / 2,124) | **48.3%** (199 / 412) |
 | Application | 91.8% | 83.8% |
 | Domain | 91.8% | 61.1% |
 | API | 61.7% | 35.7% |
-| Infrastructure | 71.0% | 55.4% |
+| Infrastructure | 71.1% | 55.4% |
 | Application + Domain | 91.8% | 79.1% |
 | Excluding generated OpenAPI and EF migrations | 86.8% | 68.3% |
 

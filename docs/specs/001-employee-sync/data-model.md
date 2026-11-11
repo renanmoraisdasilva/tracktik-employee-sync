@@ -23,7 +23,7 @@
 | `Department` | `nvarchar(120)` | Yes | — | Optional. |
 | `StartDate` | `date` | Yes | — | Optional; `DateOnly` in .NET. |
 | `Status` | `nvarchar(16)` | No | — | `active`, `inactive`, `terminated`. |
-| `SyncStatus` | `nvarchar(16)` | No | `pending` | `pending`, `synced`, `failed`. |
+| `SyncStatus` | `nvarchar(16)` | No | — | `pending`, `synced`, `failed`. The application sets `pending`; there is no DB default. |
 | `Attempts` | `int` | No | `0` | Monotonic lifetime counter. |
 | `LastError` | `nvarchar(2000)` | Yes | — | Safe, truncated message; no secrets. |
 | `LastAttemptAt` | `datetimeoffset(7)` | Yes | — | UTC. |
