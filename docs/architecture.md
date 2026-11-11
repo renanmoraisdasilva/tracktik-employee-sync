@@ -127,8 +127,10 @@ Only `pending`, `synced` and `failed` exist.
 - Subject: `tracktik.employees.synced`.
 - Payload: `eventId`, `eventType`, `occurredAt`, `provider`,
   `providerEmployeeId`, `employeeId`, `attempts`.
-- Publishing happens after the `synced` commit.
-- A publisher failure is logged; the request still succeeds.
+- Publishing happens after the `synced` commit, so the event describes durable
+  state.
+- A publisher failure is logged and the request still succeeds, because the sync
+  itself completed; an error would invite a retry of a committed sync.
 - The transactional outbox is the next reliability step, not v1.
 
 ## 8. Data

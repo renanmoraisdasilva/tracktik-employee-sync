@@ -3,7 +3,7 @@
 - **Status:** Accepted
 - **Date:** 2026-11-11
 - **Deciders:** Renan Silva
-- **Related:** `docs/specs/001-employee-sync/spec.md` (FR-005, FR-009)
+- **Related:** `docs/specs/001-employee-sync/spec.md` (FR-005, FR-009, FR-011)
 
 ## Context
 
@@ -32,6 +32,11 @@ On a forward failure:
 - no `EmployeeSynced` event is published;
 - the API returns `502 ProblemDetails` with the sync state.
 
+`EmployeeSynced` is published only after the `synced` commit, once per
+successful sync. The event describes durable state: publishing before the commit
+could announce a state that was never stored, and publishing on failure would be
+false.
+
 The only statuses are `pending`, `synced` and `failed`.
 
 ## Consequences
@@ -43,6 +48,9 @@ The only statuses are `pending`, `synced` and `failed`.
 - If TrackTik succeeds but the status update fails, the row can be stale. The
   service retries the status update, then returns `500` and logs the
   inconsistency. An outbox/reconciliation is the next step.
+- A publisher failure is logged and the request still succeeds, because the sync
+  and its state are already committed. Returning an error would push the caller
+  to retry a completed sync.
 - Rolling back the row on failure is forbidden; the failure path is a feature.
 
 ## Alternatives considered
