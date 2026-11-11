@@ -40,6 +40,11 @@ jobs:
         run: dotnet test tests/EmployeeSync.IntegrationTests --configuration Release --no-build
 
       - name: Secret scan
-        uses: gitleaks/gitleaks-action@v2
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          docker run --rm \
+            -v "${{ github.workspace }}:/repo" \
+            zricethezav/gitleaks:latest detect \
+            --source=/repo \
+            --config=/repo/.gitleaks.toml \
+            --redact \
+            --exit-code 2
