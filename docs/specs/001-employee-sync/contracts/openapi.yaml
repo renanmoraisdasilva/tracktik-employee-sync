@@ -1,0 +1,503 @@
+openapi: 3.0.3
+info:
+  title: TrackTik Employee Sync Service
+  version: 1.0.0
+  description: |
+    Spec-first API contract for the employee sync service.
+
+    The generated OpenAPI document served by the application may add framework
+    metadata; this file is the intended contract. The service itself has no
+    authentication; provider endpoints are internal to the challenge.
+
+    Error responses use `application/problem+json` (RFC 9457 / RFC 7807).
+servers:
+  - url: http://localhost:8080
+    description: Local Docker Compose or host run
+
+tags:
+  - name: Employees
+    description: Receive and read employees
+  - name: Reports
+    description: Read-only bonus report
+
+paths:
+  /api/v1/providers/{provider}/employees:
+    post:
+      tags: [Employees]
+      operationId: submitEmployee
+      summary: Receive an employee from a provider
+      description: |
+        Validates and maps the provider payload, stores it with
+        `syncStatus = pending`, forwards it to TrackTik, and commits
+        `synced` or `failed`.
+
+        The first insert of an identity returns `201 Created` with a
+        `Location` header. A resubmission/update returns `200 OK`.
+
+        A TrackTik failure after persistence returns `502` with the sync
+        state in the problem details. The row is not rolled back.
+      parameters:
+        - $ref: '#/components/parameters/Provider'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              oneOf:
+                - $ref: '#/components/schemas/Provider1Employee'
+                - $ref: '#/components/schemas/Provider2Employee'
+            examples:
+              provider1:
+                summary: Flat Provider 1 employee
+                value:
+                  emp_id: P1_001
+                  first_name: Alice
+                  last_name: Johnson
+                  email_address: alice.johnson@provider1.com
+                  phone: "+1-555-0101"
+                  job_title: Security Officer
+                  dept: Security Operations
+                  hire_date: "2024-01-15"
+                  employment_status: active
+              provider2:
+                summary: Nested Provider 2 employee
+                value:
+                  employee_number: P2_001
+                  personal_info:
+                    given_name: Carol
+                    family_name: Davis
+                    email: carol.davis@provider2.com
+                    mobile: "+1-555-0201"
+                  work_info:
+                    role: Security Guard
+                    division: Night Shift Security
+                    start_date: "2024-02-01"
+                    current_status: employed
+      responses:
+        "201":
+          description: Employee created and synced
+          headers:
+            Location:
+              description: URL of the stored employee
+              schema:
+                type: string
+                example: /api/v1/employees/provider1/P1_001
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EmployeeResponse'
+              examples:
+                synced:
+                  summary: First insert, sync succeeded
+                  value:
+                    provider: provider1
+                    providerEmployeeId: P1_001
+                    employeeId: provider1-P1_001
+                    firstName: Alice
+                    lastName: Johnson
+                    email: alice.johnson@provider1.com
+                    phoneNumber: "+1-555-0101"
+                    position: Security Officer
+                    department: Security Operations
+                    startDate: "2024-01-15"
+                    status: active
+                    syncStatus: synced
+                    attempts: 1
+                    lastError: null
+                    lastAttemptAt: "2026-11-11T14:03:22Z"
+                    createdAt: "2026-11-11T14:03:21Z"
+                    updatedAt: "2026-11-11T14:03:22Z"
+        "200":
+          description: Employee updated and synced
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EmployeeResponse'
+        "400":
+          description: Validation failure; nothing persisted or sent
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ValidationProblemDetails'
+              examples:
+                invalidEmail:
+                  summary: Invalid email address
+                  value:
+                    type: https://tools.ietf.org/html/rfc9110#section-15.5.1
+                    title: One or more validation errors occurred.
+                    status: 400
+                    errors:
+                      email_address:
+                        - The email_address field is not a valid e-mail address.
+        "404":
+          description: Unknown provider
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
+              examples:
+                unknownProvider:
+                  summary: Unknown provider
+                  value:
+                    type: https://tools.ietf.org/html/rfc9110#section-15.5.5
+                    title: Provider not found
+                    status: 404
+                    detail: Unknown provider 'provider3'.
+                    instance: /api/v1/providers/provider3/employees
+        "502":
+          description: TrackTik failed after the employee was persisted
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
+              examples:
+                syncFailed:
+                  summary: TrackTik returned 500
+                  value:
+                    type: https://httpstatuses.com/502
+                    title: TrackTik synchronization failed
+                    status: 502
+                    detail: The employee was stored with status 'failed' but could not be synchronized.
+                    instance: /api/v1/providers/provider1/employees
+                    syncStatus: failed
+                    attempts: 1
+                    lastError: TrackTik returned 500 Internal Server Error.
+                    lastAttemptAt: "2026-11-11T14:03:22Z"
+        "500":
+          description: Unexpected server error or a failed status update after TrackTik success
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
+
+  /api/v1/employees/{provider}/{providerEmployeeId}:
+    get:
+      tags: [Employees]
+      operationId: getEmployee
+      summary: Read a stored employee and its sync state
+      parameters:
+        - $ref: '#/components/parameters/Provider'
+        - name: providerEmployeeId
+          in: path
+          required: true
+          description: The provider's own employee ID, URL-encoded if necessary.
+          schema:
+            type: string
+            example: P1_001
+      responses:
+        "200":
+          description: Stored employee
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EmployeeResponse'
+        "404":
+          description: Employee or provider not found
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
+              examples:
+                missingEmployee:
+                  summary: Missing employee
+                  value:
+                    type: https://tools.ietf.org/html/rfc9110#section-15.5.5
+                    title: Employee not found
+                    status: 404
+                    detail: No employee exists for provider 'provider1' with provider employee id 'P1_999'.
+                    instance: /api/v1/employees/provider1/P1_999
+        "500":
+          description: Unexpected server error
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
+
+  /api/v1/reports/employees-by-sync-status:
+    get:
+      tags: [Reports]
+      operationId: getEmployeeCountsBySyncStatus
+      summary: Count employees by sync status (bonus)
+      responses:
+        "200":
+          description: Counts grouped by sync status
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/SyncStatusCount'
+              examples:
+                counts:
+                  value:
+                    - syncStatus: pending
+                      count: 0
+                    - syncStatus: synced
+                      count: 4
+                    - syncStatus: failed
+                      count: 0
+        "500":
+          description: Unexpected server error
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
+
+components:
+  parameters:
+    Provider:
+      name: provider
+      in: path
+      required: true
+      description: The identity provider name.
+      schema:
+        type: string
+        enum: [provider1, provider2]
+        example: provider1
+
+  schemas:
+    Provider1Employee:
+      type: object
+      description: Flat snake_case payload from Provider 1.
+      required: [emp_id, first_name, last_name, email_address]
+      properties:
+        emp_id:
+          type: string
+          example: P1_001
+        first_name:
+          type: string
+          example: Alice
+        last_name:
+          type: string
+          example: Johnson
+        email_address:
+          type: string
+          format: email
+          example: alice.johnson@provider1.com
+        phone:
+          type: string
+          nullable: true
+          example: "+1-555-0101"
+        job_title:
+          type: string
+          nullable: true
+          example: Security Officer
+        dept:
+          type: string
+          nullable: true
+          example: Security Operations
+        hire_date:
+          type: string
+          format: date
+          nullable: true
+          example: "2024-01-15"
+        employment_status:
+          type: string
+          nullable: true
+          enum: [active, inactive, terminated]
+          example: active
+
+    Provider2Employee:
+      type: object
+      description: Nested payload from Provider 2.
+      required: [employee_number, personal_info, work_info]
+      properties:
+        employee_number:
+          type: string
+          example: P2_001
+        personal_info:
+          $ref: '#/components/schemas/PersonalInfo'
+        work_info:
+          $ref: '#/components/schemas/WorkInfo'
+
+    PersonalInfo:
+      type: object
+      properties:
+        given_name:
+          type: string
+          nullable: true
+          example: Carol
+        family_name:
+          type: string
+          nullable: true
+          example: Davis
+        email:
+          type: string
+          format: email
+          nullable: true
+          example: carol.davis@provider2.com
+        mobile:
+          type: string
+          nullable: true
+          example: "+1-555-0201"
+
+    WorkInfo:
+      type: object
+      properties:
+        role:
+          type: string
+          nullable: true
+          example: Security Guard
+        division:
+          type: string
+          nullable: true
+          example: Night Shift Security
+        start_date:
+          type: string
+          format: date
+          nullable: true
+          example: "2024-02-01"
+        current_status:
+          type: string
+          nullable: true
+          enum: [employed, on_leave, terminated]
+          example: employed
+
+    EmployeeResponse:
+      type: object
+      required:
+        - provider
+        - providerEmployeeId
+        - employeeId
+        - firstName
+        - lastName
+        - email
+        - status
+        - syncStatus
+        - attempts
+        - createdAt
+        - updatedAt
+      properties:
+        provider:
+          type: string
+          enum: [provider1, provider2]
+          example: provider1
+        providerEmployeeId:
+          type: string
+          example: P1_001
+        employeeId:
+          type: string
+          description: The derived TrackTik employee ID.
+          example: provider1-P1_001
+        firstName:
+          type: string
+          example: Alice
+        lastName:
+          type: string
+          example: Johnson
+        email:
+          type: string
+          format: email
+          example: alice.johnson@provider1.com
+        phoneNumber:
+          type: string
+          nullable: true
+          example: "+1-555-0101"
+        position:
+          type: string
+          nullable: true
+          example: Security Officer
+        department:
+          type: string
+          nullable: true
+          example: Security Operations
+        startDate:
+          type: string
+          format: date
+          nullable: true
+          example: "2024-01-15"
+        status:
+          type: string
+          enum: [active, inactive, terminated]
+          example: active
+        syncStatus:
+          type: string
+          enum: [pending, synced, failed]
+          example: synced
+        attempts:
+          type: integer
+          format: int32
+          minimum: 0
+          example: 1
+        lastError:
+          type: string
+          nullable: true
+          example: null
+        lastAttemptAt:
+          type: string
+          format: date-time
+          nullable: true
+          example: "2026-11-11T14:03:22Z"
+        createdAt:
+          type: string
+          format: date-time
+          example: "2026-11-11T14:03:21Z"
+        updatedAt:
+          type: string
+          format: date-time
+          example: "2026-11-11T14:03:22Z"
+
+    ProblemDetails:
+      type: object
+      description: RFC 9457 problem details, with optional sync extensions.
+      properties:
+        type:
+          type: string
+          format: uri
+          nullable: true
+        title:
+          type: string
+          nullable: true
+        status:
+          type: integer
+          format: int32
+          nullable: true
+        detail:
+          type: string
+          nullable: true
+        instance:
+          type: string
+          format: uri
+          nullable: true
+        syncStatus:
+          type: string
+          enum: [pending, synced, failed]
+          description: Present on a 502 after a failed sync.
+        attempts:
+          type: integer
+          format: int32
+          description: Present on a 502 after a failed sync.
+        lastError:
+          type: string
+          nullable: true
+          description: Present on a 502 after a failed sync.
+        lastAttemptAt:
+          type: string
+          format: date-time
+          nullable: true
+          description: Present on a 502 after a failed sync.
+      additionalProperties: true
+
+    ValidationProblemDetails:
+      allOf:
+        - $ref: '#/components/schemas/ProblemDetails'
+        - type: object
+          properties:
+            errors:
+              type: object
+              additionalProperties:
+                type: array
+                items:
+                  type: string
+
+    SyncStatusCount:
+      type: object
+      required: [syncStatus, count]
+      properties:
+        syncStatus:
+          type: string
+          enum: [pending, synced, failed]
+        count:
+          type: integer
+          format: int64
+          minimum: 0
