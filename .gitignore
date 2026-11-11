@@ -1,0 +1,40 @@
+# Build output
+bin/
+obj/
+artifacts/
+TestResults/
+coverage/
+coverage.*
+*.trx
+*.coverage
+*.coveragexml
+
+# IDE and local settings
+.vs/
+.vscode/
+.idea/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+*.DotSettings.user
+
+# Secrets and local environment
+.env
+.env.*
+!.env.example
+oauth-credentials.json
+appsettings.*.local.json
+secrets.json
+*.pfx
+*.snk
+
+# Logs and temp
+*.log
+logs/
+tmp/
+temp/
+
+# OS files
+.DS_Store
+Thumbs.db
