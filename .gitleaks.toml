@@ -1,0 +1,10 @@
+# Local development placeholders are not secrets.
+# Keep this allowlist narrow; real credentials must never be added here.
+[allowlist]
+description = "Local placeholder values used in committed configuration examples"
+regexes = [
+  '''CHANGE_ME_Local_123!''',
+  '''YOUR_LOCAL_SA_PASSWORD''',
+  '''YOUR_CLIENT_ID''',
+  '''YOUR_CLIENT_SECRET'''
+]

@@ -48,7 +48,7 @@ record is persisted before the external call, a failed sync keeps the row as
 > `Copy-Item`, and `curl` becomes `curl.exe`.
 
 ```bash
-git clone https://github.com/yourusername/tracktik-employee-sync.git
+git clone https://github.com/renanmoraisdasilva/tracktik-employee-sync.git
 cd tracktik-employee-sync
 
 cp .env.example .env

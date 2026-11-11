@@ -20,7 +20,7 @@ cp .env.example .env
 Edit `.env`:
 
 ```text
-MSSQL_SA_PASSWORD=CHANGE_ME_Local_123!
+MSSQL_SA_PASSWORD=YOUR_LOCAL_SA_PASSWORD
 TRACKTIK_BASE_URL=https://.../prod/v1
 TRACKTIK_TOKEN_URL=https://.../prod/oauth/token
 TRACKTIK_CLIENT_ID=YOUR_CLIENT_ID
