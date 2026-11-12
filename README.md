@@ -454,6 +454,10 @@ An outbox is documented as a stretch goal, not implemented in v1.
   is an upsert, so "created" is not always true.
 - **`attempts`:** monotonic lifetime counter of logical sync attempts, not
   outbound HTTP calls; never reset.
+- **Attempt metadata durability:** `attempts` and `lastAttemptAt` are saved with
+  the terminal status, so a crash during the outbound call can leave the pending
+  row with stale metadata — a deliberate trade-off for the simple synchronous
+  flow.
 - **`lastError`:** cleared on success.
 - **Strict validation:** payloads that pass the provider schema but lack
   `firstName`, `lastName`, `email` or `status` are rejected with 400 before
