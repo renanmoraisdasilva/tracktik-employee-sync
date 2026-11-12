@@ -2,7 +2,7 @@
 
 - **Status:** Accepted
 - **Date:** 2026-11-11
-- **Sources:** `test-package/README.md`, `API_DOCUMENTATION.md`, `SUBMISSION.md`,
+- **Sources:** the challenge README, API documentation, submission instructions,
   the three JSON schemas and the sample data.
 
 ---
@@ -167,4 +167,4 @@ Optional: `phoneNumber`, `position`, `department`, `startDate`.
 ## 7. Open questions
 
 None for implementation. The behavioral and tooling decisions are recorded in
-the planning package `DECISIONS.md` and `docs/decisions/`.
+[`docs/decisions/`](../../decisions/).

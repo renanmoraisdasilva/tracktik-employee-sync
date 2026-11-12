@@ -37,7 +37,8 @@ record is persisted before the external call, a failed sync keeps the row as
 
 ### Prerequisites
 
-- [.NET 10 SDK](https://dotnet.microsoft.com/)
+- [.NET 10 SDK](https://dotnet.microsoft.com/) — `global.json` pins `10.0.400`
+  for the host-run path. Docker Compose does not need a host SDK.
 - Docker Desktop with Compose v2
 - For the host-run path and manual migrations: `dotnet-ef`
   (`dotnet tool install --global dotnet-ef`). Compose does not need it.
@@ -55,6 +56,7 @@ cd tracktik-employee-sync
 cp .env.example .env
 # Edit .env:
 #   MSSQL_SA_PASSWORD  — a local-only strong password
+#   TRACKTIK_BASE_URL / TRACKTIK_TOKEN_URL — from API_DOCUMENTATION.md
 #   TRACKTIK_CLIENT_ID / TRACKTIK_CLIENT_SECRET — from the test package
 #   (or use dotnet user-secrets for local `dotnet run`; see Configuration)
 
@@ -336,7 +338,8 @@ The default suite covers:
 - sync success: `synced`, attempts, cleared error, event;
 - sync failure: 502, `failed` row, no event;
 - resubmission: same row, POST vs PUT;
-- token cache: reuse, expiry, single-flight refresh, 401 refresh;
+- token cache: reuse, expiry (including short-lived tokens), single-flight
+  refresh, 401 refresh;
 - GET found and missing;
 - unknown provider: 404;
 - OpenAPI document reachable, with the `oneOf` provider bodies and
@@ -348,9 +351,9 @@ that also asserts camelCase JSON. The category is opt-in so `dotnet test` stays
 fast and portable. The project is intentionally outside `EmployeeSync.sln` so a
 bare `dotnet test` stays Docker-free; CI runs it on a Docker-capable runner.
 
-CI runs restore, build, unit tests, the SQLite integration tests and a secret
-scan. It also **runs** the Testcontainers tests; the hosted runner provides
-Docker. A local `dotnet test` still stays Docker-free.
+CI runs restore, build, unit tests, both integration suites (SQLite and
+Testcontainers) and a secret scan. The hosted runner provides Docker; a local
+`dotnet test` still stays Docker-free.
 
 Coverage snapshot and caveats: [docs/testing.md](docs/testing.md#9-coverage-philosophy).
 
@@ -414,6 +417,7 @@ src/
 tests/
   EmployeeSync.UnitTests/
   EmployeeSync.IntegrationTests/
+  EmployeeSync.Testcontainers/
 docs/
   specs/001-employee-sync/
   decisions/
@@ -475,7 +479,8 @@ An outbox is documented as a stretch goal, not implemented in v1.
   mechanism. A 401 triggers one token refresh and one retry.
 - **No auth on the provider endpoints.** The challenge does not ask for it;
   adding it would force the reviewer to obtain and send keys.
-- **Integration tests:** SQLite by default; Testcontainers is opt-in.
+- **Integration tests:** SQLite by default locally; Testcontainers is opt-in
+  locally and runs in CI.
 - **NATS:** started by Compose; in-memory fallback for local runs and tests.
 - **Timestamps:** UTC `DateTimeOffset`; dates are `yyyy-MM-dd`.
 - **Extra JSON fields:** ignored. Null optional fields are accepted.
@@ -491,7 +496,8 @@ An outbox is documented as a stretch goal, not implemented in v1.
 - Add inbound rate limiting for provider callers and an outbound resilience
   policy (backoff and `Retry-After`) for TrackTik 429/5xx.
 - Add OpenTelemetry tracing and metrics.
-- Add a SQL Server service-container job for the broader integration suite.
+- Run the full 19-test integration suite against SQL Server in CI, beyond the
+  focused Testcontainers tests.
 - Add a `SyncAttempts` table for auditability.
 - Add contract tests generated from the OpenAPI document.
 - Support more providers through the same adapter interface.

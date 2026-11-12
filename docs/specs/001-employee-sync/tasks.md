@@ -40,7 +40,7 @@
 - [x] **T-020** Add the Provider 1 and Provider 2 request DTOs.
 - [x] **T-021** Add `Provider1EmployeeValidator`.
 - [x] **T-022** Add `Provider2EmployeeValidator`.
-- [x] **T-023** Add the outbound `TrackTikEmployeeValidator`.
+- [x] **T-023** Add `MappedEmployeeValidator` for the TrackTik-required fields.
 - [x] **T-024** Add `Provider1Mapper` and `Provider2Mapper`.
 - [x] **T-025** Add `IProviderAdapter` and the provider factory.
 - [x] **T-026** Add the golden mapping tests for both providers.
@@ -113,7 +113,7 @@
 - [x] **T-074** Write `docs/architecture.md` and `docs/testing.md`.
 - [x] **T-075** Write the ADRs and link them from the README.
 - [x] **T-076** Add the GitHub Actions workflow: restore, build, unit tests,
-  secret scan.
+  SQLite and Testcontainers integration tests, secret scan.
 - [x] **T-077** Add `.env.example`, user-secrets instructions and migration
   commands.
 - [x] **T-078** Run the secret scan and inspect the git history.

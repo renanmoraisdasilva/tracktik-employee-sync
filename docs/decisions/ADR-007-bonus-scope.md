@@ -38,7 +38,8 @@ Gates:
 
 - The submission has a strong feature story without a second runtime stack.
 - NATS is visible in Compose but not required for `dotnet run` or tests.
-- Testcontainers is real but opt-in, so `dotnet test` stays portable.
+- Testcontainers is real and opt-in locally; CI runs it, so `dotnet test` stays
+  portable.
 - The outbox remains a documented next step; reliable event delivery is not
   claimed.
 - The README has a "Bonus items" table so the reviewer can find each one.

@@ -61,7 +61,7 @@ dotnet ef database update `
 ## Definition of done
 
 - Build and default tests pass.
-- Testcontainers pass separately.
+- Testcontainers pass locally and in CI.
 - Compose works from a clean clone.
 - OpenAPI and Scalar are reachable.
 - No secret in git history.

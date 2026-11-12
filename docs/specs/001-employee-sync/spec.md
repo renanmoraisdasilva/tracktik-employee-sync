@@ -121,7 +121,7 @@ The service must map both provider shapes to the TrackTik employee:
 | `status` | `employment_status` | `employed → active`, `on_leave → inactive`, `terminated → terminated` |
 
 Mapping is deterministic and unit-tested against
-`sample-data/expected-tracktik-employees.json`.
+`tests/EmployeeSync.UnitTests/Fixtures/expected-tracktik-employees.json`.
 
 ### FR-005 — Persist before forward
 

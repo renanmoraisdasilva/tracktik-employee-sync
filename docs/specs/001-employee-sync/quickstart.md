@@ -4,7 +4,7 @@ The reviewer path. The full instructions are in the root `README.md`.
 
 ## 1. Prerequisites
 
-- .NET 10 SDK
+- .NET 10 SDK (`global.json` pins `10.0.400` for the host-run path)
 - Docker Desktop with Compose v2
 - The TrackTik test credentials from the challenge package
 

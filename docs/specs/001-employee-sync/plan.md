@@ -4,7 +4,7 @@
 - **Date:** 2026-11-11
 - **Spec:** [`spec.md`](spec.md)
 - **Tasks:** [`tasks.md`](tasks.md)
-- **Decisions:** `docs/decisions/`, planning package `DECISIONS.md`
+- **Decisions:** [`../../decisions/`](../../decisions/)
 - **Challenge deadline:** Monday, 16 November 2026, 11:59 PM ET
 
 ---
@@ -21,13 +21,13 @@
 | Mapping | Manual mapper classes |
 | Results | `Result` / `Result<T>` for expected failures; exceptions for bugs |
 | Data | EF Core 10 + SQL Server 2022 |
-| Test DB | SQLite in-memory by default; Testcontainers SQL Server opt-in |
+| Test DB | SQLite in-memory by default; Testcontainers SQL Server in CI and opt-in locally |
 | Tests | xUnit + Shouldly + NSubstitute |
 | HTTP client | `IHttpClientFactory` typed client, singleton token provider |
 | Events | In-memory publisher by default; NATS in Compose |
 | API docs | Built-in OpenAPI + Scalar |
 | Containers | Docker Compose: API + SQL Server + NATS |
-| CI | GitHub Actions: restore, build, unit tests, SQLite integration tests, secret scan |
+| CI | GitHub Actions: restore, build, unit tests, SQLite and Testcontainers integration tests, secret scan |
 
 ## 2. Constraints
 
@@ -87,7 +87,7 @@ duplicate identity.
 
 - Add the Provider 1 and Provider 2 DTOs with the correct JSON names.
 - Add `Provider1EmployeeValidator` and `Provider2EmployeeValidator`.
-- Add the outbound `TrackTikEmployeeValidator` for TrackTik-required fields.
+- Add `MappedEmployeeValidator` for the TrackTik-required fields.
 - Add `Provider1Mapper` and `Provider2Mapper`.
 - Add `IProviderAdapter` / `ProviderAdapterFactory`.
 - Unit-test both mappings against the golden sample output.
@@ -175,8 +175,8 @@ leaves `synced`; resubmission uses the right method; no duplicates.
   - GET response shape;
   - OpenAPI endpoint.
 - Testcontainers category:
-  - SQL Server migrations and the integration suite;
-  - opt-in project `tests/EmployeeSync.Testcontainers` (tagged `Category=Testcontainers`), Docker required.
+  - SQL Server migrations/persistence and a real NATS publish;
+  - opt-in project `tests/EmployeeSync.Testcontainers` (tagged `Category=Testcontainers`), Docker required; CI runs it.
 
 **Exit criteria:** `dotnet test` passes without Docker; the Testcontainers
 category passes with Docker; every acceptance criterion in the spec has a test
@@ -189,7 +189,8 @@ or a documented manual check.
 - Add the T-SQL report script and the report endpoint.
 - Finish the OpenAPI document and Scalar UI.
 - Write the README, architecture, testing doc and ADRs.
-- Add the GitHub Actions workflow: restore, build, unit tests, secret scan.
+- Add the GitHub Actions workflow: restore, build, unit tests, SQLite and
+  Testcontainers integration tests, secret scan.
 - Add `.env.example`, user-secrets instructions and the migration commands.
 - Add a secret scan locally.
 
@@ -222,8 +223,7 @@ committed, and the submission is ready.
 | DB update fails after TrackTik success | Stale row | Retry status update; 500 + log; document |
 | Event publish fails | Missing event | Log; outbox stretch |
 | Too many bonus items | Mandatory quality slips | Gated order; drop NATS first |
-| Testcontainers needs Docker | `dotnet test` fails | Opt-in project |
-| CI cannot run SQL Server tests | Red build | CI runs build + unit + SQLite integration + secret scan; Testcontainers stays opt-in |
+| Testcontainers needs Docker | `dotnet test` fails locally | Opt-in project; the CI runner provides Docker |
 | Secret committed | Public exposure | `.gitignore`, user-secrets, secret scan |
 | Scope creep (auth, outbox, OTel) | Deadline risk | Explicitly out of scope |
 
@@ -251,7 +251,7 @@ If the answer to 2 or 3 is yes and 1 is no, do not add it.
 
 - All mandatory acceptance criteria pass.
 - All four bonus items are implemented and visible.
-- `dotnet test` passes; Testcontainers passes separately.
+- `dotnet test` passes; Testcontainers passes locally and in CI.
 - `docker compose up --build` works from a clean clone.
 - The README has prerequisites, run, configuration, migrations, tests and
   assumptions.
