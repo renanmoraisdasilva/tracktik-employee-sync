@@ -174,8 +174,9 @@ Only three sync statuses exist:
 
 The row records:
 
-- `attempts` — monotonic lifetime counter, incremented once per outbound
-  attempt, including token failures; never reset;
+- `attempts` — monotonic lifetime counter, incremented once per logical sync
+  attempt (one per valid POST/resubmission), including token and employee-call
+  failures; internal 401/409 retries are part of the same attempt; never reset;
 - `lastError` — safe error message, cleared on success;
 - `lastAttemptAt` — UTC timestamp of the last attempt;
 - `ExistsInTrackTik` — see FR-007.

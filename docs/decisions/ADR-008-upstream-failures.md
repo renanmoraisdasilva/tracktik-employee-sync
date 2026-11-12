@@ -15,9 +15,9 @@ retry mechanism and requires a `502` with the persisted sync state after a
 forward failure.
 
 Automatic retries are tempting, but they interact badly with this contract.
-`attempts` is defined as one increment per outbound attempt, so a retry loop
-makes the counter ambiguous. Retrying a rate-limited call immediately can also
-extend the rate-limit window.
+`attempts` is defined as one increment per logical sync attempt, so a general
+retry loop makes the counter ambiguous. Retrying a rate-limited call immediately
+can also extend the rate-limit window.
 
 ## Decision
 
@@ -29,12 +29,15 @@ extend the rate-limit window.
 - Do not retry `429` or `5xx` automatically. Do not parse `Retry-After`.
 - Keep exactly one exception: a `401` invalidates the cached token, refreshes
   once and retries the employee call once.
+- A 401 refresh and the 409→PUT fallback are internal to the same sync attempt;
+  they do not increment `attempts` again.
 - Treat the mock's rate limits as a property of the mock, not as a requirement
   on this API. This API does not rate-limit its own callers in v1.
 
 ## Consequences
 
-- `attempts` stays a truthful count of outbound calls.
+- `attempts` stays a truthful count of logical sync attempts; it is not an
+  HTTP-request counter.
 - A caller that resubmits immediately after a `429` can hit the limit again. The
   API surfaces the failure instead of hiding it behind a retry loop.
 - The reviewer sees the whole failure contract in one request: `502`, a `failed`

@@ -281,8 +281,9 @@ synced or failed ──resubmission──→ pending
 - Only `pending`, `synced` and `failed` exist.
 - The row is committed **before** the TrackTik call. A failed call updates it to
   `failed` and keeps it; it is never rolled back or deleted.
-- `attempts` is a monotonic lifetime counter; it increments once per outbound
-  attempt, including token failures.
+- `attempts` is a monotonic lifetime counter of logical sync attempts: one per
+  valid POST or resubmission. Token fetches, the 401 refresh and the 409→PUT
+  fallback stay inside one attempt and do not increment it.
 - `lastError` is cleared on success.
 - Resubmission updates the same row. It uses `PUT` if the employee was ever
   created in TrackTik, otherwise `POST`.
@@ -451,8 +452,8 @@ An outbox is documented as a stretch goal, not implemented in v1.
 
 - **POST status:** `201` on the first insert, `200` on resubmission. The endpoint
   is an upsert, so "created" is not always true.
-- **`attempts`:** monotonic lifetime counter, incremented per outbound attempt;
-  never reset.
+- **`attempts`:** monotonic lifetime counter of logical sync attempts, not
+  outbound HTTP calls; never reset.
 - **`lastError`:** cleared on success.
 - **Strict validation:** payloads that pass the provider schema but lack
   `firstName`, `lastName`, `email` or `status` are rejected with 400 before
