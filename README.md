@@ -251,7 +251,7 @@ A 502 example:
 
 ```json
 {
-  "type": "https://httpstatuses.com/502",
+  "type": "https://tools.ietf.org/html/rfc9110#section-15.6.3",
   "title": "TrackTik synchronization failed",
   "status": 502,
   "detail": "The employee was stored with status 'failed' but could not be synchronized.",

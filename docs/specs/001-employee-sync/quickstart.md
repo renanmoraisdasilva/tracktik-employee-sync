@@ -14,8 +14,8 @@ The reviewer path. The full instructions are in the root `README.md`.
 cp .env.example .env
 ```
 
-> Windows PowerShell: use `Copy-Item .env.example .env`; the HTTP examples use
-> `curl.exe`.
+> Windows PowerShell: use `Copy-Item .env.example .env`. For the HTTP examples,
+> use `curl.exe` and a backtick for line continuation.
 
 Edit `.env`:
 
@@ -45,7 +45,7 @@ Wait for the SQL Server health check, then open:
 ## 4. Send a Provider 1 employee
 
 ```bash
-curl.exe -X POST "http://localhost:8080/api/v1/providers/provider1/employees" \
+curl -X POST "http://localhost:8080/api/v1/providers/provider1/employees" \
   -H "Content-Type: application/json" \
   -d "@samples/provider1-one.json"
 ```
@@ -60,7 +60,7 @@ Provider 2 uses the nested shape in `samples/provider2-one.json`.
 ## 5. Read it back
 
 ```bash
-curl.exe "http://localhost:8080/api/v1/employees/provider1/P1_001"
+curl "http://localhost:8080/api/v1/employees/provider1/P1_001"
 ```
 
 ## 6. Run the tests

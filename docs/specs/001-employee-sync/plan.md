@@ -56,7 +56,7 @@
   warnings, `.editorconfig`, `.gitignore`.
 - Add `Dockerfile`, `docker-compose.yml`, `.env.example` and `appsettings.json`
   placeholders.
-- Add `/health`, OpenAPI, Scalar and a hello endpoint.
+- Add `/health`, OpenAPI and Scalar.
 - Add the initial `docs/` skeleton and `AGENTS.md`.
 
 **Exit criteria:** `dotnet build` passes; `docker compose up --build` starts the
