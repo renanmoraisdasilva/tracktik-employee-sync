@@ -113,6 +113,52 @@ public sealed class ProviderValidationTests
     }
 
     [Fact]
+    public async Task Provider2_rejects_an_invalid_date()
+    {
+        var result = await Provider2.MapAsync(Parse("""
+            {
+              "employee_number": "P2_012",
+              "personal_info": {
+                "given_name": "Bad",
+                "family_name": "Date",
+                "email": "bad.date@provider2.com"
+              },
+              "work_info": {
+                "start_date": "2024-13-40",
+                "current_status": "employed"
+              }
+            }
+            """), CancellationToken.None);
+
+        result.IsFailure.ShouldBeTrue();
+        result.Error!.Type.ShouldBe(ErrorType.Validation);
+        result.Error.ValidationErrors!.Keys.ShouldContain("work_info.start_date");
+    }
+
+    [Fact]
+    public async Task Provider2_rejects_an_unknown_status()
+    {
+        var result = await Provider2.MapAsync(Parse("""
+            {
+              "employee_number": "P2_013",
+              "personal_info": {
+                "given_name": "Bad",
+                "family_name": "Status",
+                "email": "bad.status@provider2.com"
+              },
+              "work_info": {
+                "start_date": "2024-02-01",
+                "current_status": "retired"
+              }
+            }
+            """), CancellationToken.None);
+
+        result.IsFailure.ShouldBeTrue();
+        result.Error!.Type.ShouldBe(ErrorType.Validation);
+        result.Error.ValidationErrors!.Keys.ShouldContain("work_info.current_status");
+    }
+
+    [Fact]
     public async Task Provider1_requires_status_even_though_the_schema_does_not()
     {
         var result = await Provider1.MapAsync(Parse("""

@@ -109,6 +109,8 @@ public sealed class EmployeeApiTests : IClassFixture<ApiFactory>
         body.ShouldNotBeNull();
         body.SyncStatus.ShouldBe("synced");
         body.Attempts.ShouldBe(2);
+        body.LastError.ShouldBeNull();
+        body.LastAttemptAt.HasValue.ShouldBeTrue();
 
         _factory.TrackTik.Created.Count(
             employee => employee.EmployeeId == employeeId).ShouldBe(1);
@@ -184,6 +186,9 @@ public sealed class EmployeeApiTests : IClassFixture<ApiFactory>
         var problem = JsonDocument.Parse(await response.Content.ReadAsStringAsync()).RootElement;
         problem.GetProperty("syncStatus").GetString().ShouldBe("failed");
         problem.GetProperty("attempts").GetInt32().ShouldBe(1);
+        problem.GetProperty("lastError").GetString()
+            .ShouldBe("TrackTik returned 500 Internal Server Error.");
+        problem.GetProperty("lastAttemptAt").ValueKind.ShouldBe(JsonValueKind.String);
 
         var getResponse = await _client.GetAsync(
             $"/api/v1/employees/provider1/{id}");
@@ -193,10 +198,49 @@ public sealed class EmployeeApiTests : IClassFixture<ApiFactory>
         stored.ShouldNotBeNull();
         stored.SyncStatus.ShouldBe("failed");
         stored.Attempts.ShouldBe(1);
+        stored.LastError.ShouldBe("TrackTik returned 500 Internal Server Error.");
+        stored.LastAttemptAt.HasValue.ShouldBeTrue();
 
         CountRows("provider1", id).ShouldBe(1);
         _factory.Events.Events.ShouldNotContain(
             domainEvent => domainEvent.ProviderEmployeeId == id);
+    }
+
+    [Fact]
+    public async Task Status_save_failure_after_failed_sync_returns_500_and_keeps_pending_row()
+    {
+        const string id = "IT_007";
+        const string employeeId = "provider1-IT_007";
+        _factory.TrackTik.FailEmployeeIds.Add(employeeId);
+        _factory.SaveFailure.Fail = true;
+
+        try
+        {
+            var response = await _client.PostAsync(
+                "/api/v1/providers/provider1/employees",
+                Provider1Payload(id));
+
+            response.StatusCode.ShouldBe(HttpStatusCode.InternalServerError);
+            response.Content.Headers.ContentType?.MediaType.ShouldBe("application/problem+json");
+
+            var getResponse = await _client.GetAsync(
+                $"/api/v1/employees/provider1/{id}");
+            getResponse.StatusCode.ShouldBe(HttpStatusCode.OK);
+
+            var stored = await getResponse.Content.ReadFromJsonAsync<EmployeeResponse>();
+            stored.ShouldNotBeNull();
+            stored.SyncStatus.ShouldBe("pending");
+            stored.Attempts.ShouldBe(0);
+            stored.LastError.ShouldBeNull();
+
+            _factory.Events.Events.ShouldNotContain(
+                domainEvent => domainEvent.ProviderEmployeeId == id);
+        }
+        finally
+        {
+            _factory.SaveFailure.Fail = false;
+            _factory.TrackTik.FailEmployeeIds.Remove(employeeId);
+        }
     }
 
     [Fact]
@@ -229,6 +273,45 @@ public sealed class EmployeeApiTests : IClassFixture<ApiFactory>
         CountRows("provider1", id).ShouldBe(0);
         _factory.TrackTik.Created.ShouldNotContain(
             employee => employee.EmployeeId == "provider1-IT_004");
+    }
+
+    [Fact]
+    public async Task Provider2_invalid_date_and_status_returns_400_and_writes_nothing()
+    {
+        const string id = "IT_011";
+
+        var payload = new Dictionary<string, object?>
+        {
+            ["employee_number"] = id,
+            ["personal_info"] = new Dictionary<string, object?>
+            {
+                ["given_name"] = "Bad",
+                ["family_name"] = "Date",
+                ["email"] = "bad.date@provider2.com"
+            },
+            ["work_info"] = new Dictionary<string, object?>
+            {
+                ["start_date"] = "2024-13-40",
+                ["current_status"] = "retired"
+            }
+        };
+
+        var response = await _client.PostAsync(
+            "/api/v1/providers/provider2/employees",
+            JsonContent.Create(payload));
+
+        response.StatusCode.ShouldBe(HttpStatusCode.BadRequest);
+        response.Content.Headers.ContentType?.MediaType.ShouldBe("application/problem+json");
+
+        var problem = JsonDocument.Parse(
+            await response.Content.ReadAsStringAsync()).RootElement;
+        var errors = problem.GetProperty("errors");
+        errors.TryGetProperty("work_info.start_date", out _).ShouldBeTrue();
+        errors.TryGetProperty("work_info.current_status", out _).ShouldBeTrue();
+
+        CountRows("provider2", id).ShouldBe(0);
+        _factory.TrackTik.Created.ShouldNotContain(
+            employee => employee.EmployeeId == $"provider2-{id}");
     }
 
     [Fact]

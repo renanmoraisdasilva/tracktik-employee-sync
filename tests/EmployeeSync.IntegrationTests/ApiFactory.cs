@@ -22,6 +22,8 @@ public sealed class ApiFactory : WebApplicationFactory<Program>
 
     public FakeEventPublisher Events { get; } = new();
 
+    public SaveFailureSwitch SaveFailure { get; } = new();
+
     protected override void ConfigureWebHost(IWebHostBuilder builder)
     {
         builder.UseEnvironment("Testing");
@@ -33,12 +35,18 @@ public sealed class ApiFactory : WebApplicationFactory<Program>
             services.RemoveAll<DbContextOptions<AppDbContext>>();
             services.RemoveAll<ITrackTikClient>();
             services.RemoveAll<IEventPublisher>();
+            services.RemoveAll<IEmployeeRepository>();
 
             _connection.Open();
 
             services.AddDbContext<AppDbContext>(options => options.UseSqlite(_connection));
             services.AddSingleton<ITrackTikClient>(TrackTik);
             services.AddSingleton<IEventPublisher>(Events);
+            services.AddSingleton(SaveFailure);
+            services.AddScoped<IEmployeeRepository>(serviceProvider =>
+                new FailingEmployeeRepository(
+                    serviceProvider.GetRequiredService<AppDbContext>(),
+                    serviceProvider.GetRequiredService<SaveFailureSwitch>()));
         });
     }
 

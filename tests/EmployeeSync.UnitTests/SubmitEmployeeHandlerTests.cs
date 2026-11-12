@@ -219,6 +219,8 @@ public sealed class SubmitEmployeeHandlerTests
 
         result.IsSuccess.ShouldBeTrue();
         result.Value.Employee.Attempts.ShouldBe(3);
+        result.Value.Employee.LastError.ShouldBeNull();
+        existing.LastError.ShouldBeNull();
         await harness.TrackTik.Received(1).UpdateAsync(
             Arg.Any<TrackTikEmployee>(),
             Arg.Any<CancellationToken>());
@@ -267,6 +269,34 @@ public sealed class SubmitEmployeeHandlerTests
     }
 
     [Fact]
+    public async Task Concurrent_insert_race_with_missing_row_returns_unexpected_error()
+    {
+        var harness = new Harness();
+        harness.Repository.FindAsync(
+                Arg.Any<EmployeeIdentity>(),
+                Arg.Any<CancellationToken>())
+            .Returns(Task.FromResult<Employee?>(null));
+        harness.Repository.TryAddAsync(
+                Arg.Any<Employee>(),
+                Arg.Any<CancellationToken>())
+            .Returns(false);
+
+        var result = await harness.Handler.HandleAsync(
+            new SubmitEmployeeCommand("provider1", Payload),
+            CancellationToken.None);
+
+        result.IsFailure.ShouldBeTrue();
+        result.Error!.Type.ShouldBe(ErrorType.Unexpected);
+
+        await harness.Repository.Received(2).FindAsync(
+            Arg.Any<EmployeeIdentity>(),
+            Arg.Any<CancellationToken>());
+        await harness.TrackTik.DidNotReceive().CreateAsync(
+            Arg.Any<TrackTikEmployee>(),
+            Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
     public async Task Failed_resubmission_that_never_created_still_uses_post()
     {
         var harness = new Harness();
@@ -288,6 +318,8 @@ public sealed class SubmitEmployeeHandlerTests
 
         result.IsSuccess.ShouldBeTrue();
         result.Value.Employee.Attempts.ShouldBe(2);
+        result.Value.Employee.LastError.ShouldBeNull();
+        existing.LastError.ShouldBeNull();
         await harness.TrackTik.Received(1).CreateAsync(
             Arg.Any<TrackTikEmployee>(),
             Arg.Any<CancellationToken>());
@@ -370,6 +402,30 @@ public sealed class SubmitEmployeeHandlerTests
         result.IsFailure.ShouldBeTrue();
         result.Error!.Type.ShouldBe(ErrorType.Unexpected);
         await harness.Repository.Received(3).SaveChangesAsync(
+            Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
+    public async Task Status_save_failure_after_failed_sync_returns_unexpected_error()
+    {
+        var harness = new Harness();
+        harness.TrackTik.CreateAsync(
+                Arg.Any<TrackTikEmployee>(),
+                Arg.Any<CancellationToken>())
+            .Returns(Task.FromException(new TrackTikException("TrackTik returned 500.")));
+        harness.Repository.SaveChangesAsync(Arg.Any<CancellationToken>())
+            .Returns(Task.FromException(new InvalidOperationException("database unavailable")));
+
+        var result = await harness.Handler.HandleAsync(
+            new SubmitEmployeeCommand("provider1", Payload),
+            CancellationToken.None);
+
+        result.IsFailure.ShouldBeTrue();
+        result.Error!.Type.ShouldBe(ErrorType.Unexpected);
+        await harness.Repository.Received(3).SaveChangesAsync(
+            Arg.Any<CancellationToken>());
+        await harness.Publisher.DidNotReceive().PublishAsync(
+            Arg.Any<EmployeeSynced>(),
             Arg.Any<CancellationToken>());
     }
 

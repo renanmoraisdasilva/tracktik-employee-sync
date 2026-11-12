@@ -32,6 +32,9 @@ dotnet test tests/EmployeeSync.IntegrationTests
 dotnet test tests/EmployeeSync.Testcontainers
 ```
 
+The default suite currently has **50 unit** and **21 SQLite integration** tests;
+Testcontainers adds 3.
+
 ## 3. Unit test matrix
 
 | Area | Scenario | Expected |
@@ -46,11 +49,15 @@ dotnet test tests/EmployeeSync.Testcontainers
 | Identity | `provider1` + `P1_001` | `provider1-P1_001` |
 | Validation | Missing name/email/status | 400; message |
 | Validation | Invalid email/date/status | 400; message |
+| Validation | Provider 2 invalid date/status | 400; nested field keys |
 | Validation | Error keys | Provider JSON names (`email_address`, `personal_info.email`) |
 | Validation | Extra field | Ignored |
 | Validation | Optional fields omitted | Accepted |
 | Sync | TrackTik success | `synced`, attempts++, error null |
 | Sync | TrackTik 500/timeout/429 | `failed`, attempts++, error recorded |
+| Sync | Status save failure after failed sync | 3 retries, then unexpected error |
+| Sync | Concurrent insert, reload missing | Unexpected error, no TrackTik call |
+| Sync | Failed row resubmitted successfully | `lastError` cleared |
 | Sync | Flag false | POST |
 | Sync | Flag true | PUT |
 | Sync | Failed, never created | Retry POST |
@@ -74,11 +81,13 @@ dotnet test tests/EmployeeSync.Testcontainers
 |---|---|---|
 | First insert success | Valid Provider 1 POST; fake TrackTik 201 | 201, `Location`, `synced`, one row, event |
 | Update success | Same identity again; fake expects PUT | 200, same row, PUT, event |
-| TrackTik failure | Valid POST; fake 500 | 502, `application/problem+json`, `failed`, row kept, no event |
-| Resubmit after failure | Same identity; fake 201 | 200, same row, POST, `synced`, one event |
+| TrackTik failure | Valid POST; fake 500 | 502, `application/problem+json`, `failed`, row kept, no event, sync fields present |
+| Status save failure after failed sync | Valid POST; TrackTik 500; status save fails | 500, pending row, no event |
+| Resubmit after failure | Same identity; fake 201 | 200, same row, POST, `synced`, cleared error, one event |
 | Same email, different providers | POST both providers with the same email | Two rows and two TrackTik IDs; no merge |
 | Identity case | POST `P1_001` and `p1_001` | Two rows; case-sensitive on SQLite and SQL Server |
 | Validation failure | Missing required field | 400, no row, fake TrackTik never called |
+| Provider 2 validation failure | Invalid date and status | 400 with nested field keys, no row, fake TrackTik never called |
 | Unknown provider | POST `/providers/provider3/...` | 404 ProblemDetails, no row |
 | GET found | GET after success | 200, full response |
 | GET missing | GET unknown identity | 404 ProblemDetails |
@@ -174,10 +183,11 @@ branches are:
 - unknown provider / missing employee → 404;
 - OpenAPI reachable.
 
-### Current coverage snapshot
+### Last recorded coverage snapshot
 
 Measured on `main` on 12 November 2026 from the **46 unit + 19 SQLite
-integration tests**:
+integration tests**, before the final edge-case tests. Re-run the commands below
+for a current figure:
 
 | Scope | Line | Branch |
 |---|---:|---:|
