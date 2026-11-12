@@ -219,6 +219,13 @@ public sealed class EmployeeApiTests : IClassFixture<ApiFactory>
         response.StatusCode.ShouldBe(HttpStatusCode.BadRequest);
         response.Content.Headers.ContentType?.MediaType.ShouldBe("application/problem+json");
 
+        var problem = JsonDocument.Parse(
+            await response.Content.ReadAsStringAsync()).RootElement;
+        problem.GetProperty("errors").TryGetProperty("email_address", out _)
+            .ShouldBeTrue();
+        problem.GetProperty("errors").TryGetProperty("EmailAddress", out _)
+            .ShouldBeFalse();
+
         CountRows("provider1", id).ShouldBe(0);
         _factory.TrackTik.Created.ShouldNotContain(
             employee => employee.EmployeeId == "provider1-IT_004");

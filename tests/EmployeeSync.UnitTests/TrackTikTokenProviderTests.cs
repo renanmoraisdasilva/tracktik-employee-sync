@@ -38,6 +38,31 @@ public sealed class TrackTikTokenProviderTests
     }
 
     [Fact]
+    public async Task Short_lived_token_is_not_treated_as_already_expired()
+    {
+        var handler = new TokenHandler { ExpiresIn = 30 };
+        var clock = new FakeTimeProvider(
+            new DateTimeOffset(2026, 11, 11, 12, 0, 0, TimeSpan.Zero));
+        var provider = CreateProvider(handler, clock);
+
+        var first = await provider.GetTokenAsync(CancellationToken.None);
+
+        clock.Advance(TimeSpan.FromSeconds(10));
+        var second = await provider.GetTokenAsync(CancellationToken.None);
+
+        second.ShouldBe(first);
+        handler.Calls.ShouldBe(1);
+
+        // 30-second token: the effective skew is 15 seconds.
+        clock.Advance(TimeSpan.FromSeconds(6));
+
+        var third = await provider.GetTokenAsync(CancellationToken.None);
+
+        third.ShouldBe("token-2");
+        handler.Calls.ShouldBe(2);
+    }
+
+    [Fact]
     public async Task Invalidate_forces_a_new_token()
     {
         var handler = new TokenHandler();
@@ -204,6 +229,8 @@ public sealed class TrackTikTokenProviderTests
 
         public bool SimulateTimeout { get; init; }
 
+        public int ExpiresIn { get; init; } = 3600;
+
         protected override async Task<HttpResponseMessage> SendAsync(
             HttpRequestMessage request,
             CancellationToken cancellationToken)
@@ -245,7 +272,7 @@ public sealed class TrackTikTokenProviderTests
             }
 
             var token = $"token-{Calls}";
-            var json = $"{{\"access_token\":\"{token}\",\"expires_in\":3600}}";
+            var json = $"{{\"access_token\":\"{token}\",\"expires_in\":{ExpiresIn}}}";
 
             return new HttpResponseMessage(HttpStatusCode.OK)
             {

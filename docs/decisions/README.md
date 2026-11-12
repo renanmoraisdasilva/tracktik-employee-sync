@@ -13,6 +13,4 @@ Consequential choices, with context, alternatives and consequences.
 | [ADR-007](ADR-007-bonus-scope.md) | All four bonus items, gated; outbox deferred |
 | [ADR-008](ADR-008-upstream-failures.md) | Upstream failures are recorded and resubmitted, not retried |
 
-The complete decision log from the grilling session is in the planning package
-(`test-package-guide/DECISIONS.md`). This folder contains the ADRs that belong
-in the submission repository.
+This folder contains the decision record for the submission repository.

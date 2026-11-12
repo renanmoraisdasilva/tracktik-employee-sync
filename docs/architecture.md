@@ -114,7 +114,8 @@ Only `pending`, `synced` and `failed` exist.
   `TrackTik:TimeoutSeconds`.
 - `ITrackTikTokenProvider` is a singleton:
   - caches the token and expiry;
-  - refreshes 60 seconds before expiry;
+  - refreshes up to 60 seconds before expiry; short-lived tokens use half their
+    lifetime as the skew;
   - uses `SemaphoreSlim` for single-flight refresh;
   - invalidates on `401` and allows one retry;
   - wraps a token-endpoint timeout as `TrackTikException`, so it follows the

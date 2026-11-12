@@ -46,6 +46,7 @@ dotnet test tests/EmployeeSync.Testcontainers
 | Identity | `provider1` + `P1_001` | `provider1-P1_001` |
 | Validation | Missing name/email/status | 400; message |
 | Validation | Invalid email/date/status | 400; message |
+| Validation | Error keys | Provider JSON names (`email_address`, `personal_info.email`) |
 | Validation | Extra field | Ignored |
 | Validation | Optional fields omitted | Accepted |
 | Sync | TrackTik success | `synced`, attempts++, error null |
@@ -59,6 +60,7 @@ dotnet test tests/EmployeeSync.Testcontainers
 | Event | Successful sync | One `EmployeeSynced` after commit |
 | Event | Failed sync | No event |
 | Token | Two calls before expiry | One token request |
+| Token | Short-lived token | Skew capped at half the lifetime; not immediately expired |
 | Token | Expiry skew reached | New token |
 | Token | 401 | Invalidate, refresh once, retry once |
 | Token | Concurrent callers | Single-flight refresh |
@@ -138,10 +140,11 @@ public sealed class FakeTrackTikHandler : HttpMessageHandler
 - `Provider_employee_ids_are_case_sensitive` proves the binary collation keeps `TC_case` and `TC_CASE` as two rows.
 - `Publish_sends_the_event_to_the_configured_subject` publishes through `NatsEventPublisher` to a real NATS container and asserts camelCase JSON.
 - These are **three focused tests**, not the whole integration suite.
-- The project is intentionally outside `EmployeeSync.sln`; CI builds it
-  separately so a bare `dotnet test` stays Docker-free.
+- The project is intentionally outside `EmployeeSync.sln`; a bare local
+  `dotnet test` stays Docker-free.
 - Docker must be running.
-- They are excluded from the default `dotnet test`; CI builds the project but does not run the tests.
+- They are excluded from the default local `dotnet test`; CI runs them on a
+  Docker-capable runner.
 - The README documents the command and the Docker requirement.
 
 ## 8. CI
@@ -150,13 +153,13 @@ GitHub Actions on push/PR to `main`:
 
 1. `dotnet restore`
 2. `dotnet build --no-restore`
-3. `dotnet build tests/EmployeeSync.Testcontainers --configuration Release`
-4. `dotnet test tests/EmployeeSync.UnitTests --no-build`
-5. `dotnet test tests/EmployeeSync.IntegrationTests --no-build` (SQLite)
+3. `dotnet test tests/EmployeeSync.UnitTests --no-build`
+4. `dotnet test tests/EmployeeSync.IntegrationTests --no-build` (SQLite)
+5. `dotnet test tests/EmployeeSync.Testcontainers --configuration Release` (Docker)
 6. secret scan (gitleaks or equivalent)
 
-The SQLite integration tests run in CI. No SQL Server, no Testcontainers and no
-real network. Testcontainers is local and opt-in.
+The default suite is Docker-free. CI runs the SQLite integration tests and the
+Testcontainers tests on a Docker-capable runner. No real TrackTik network is used.
 
 ## 9. Coverage philosophy
 
@@ -173,20 +176,20 @@ branches are:
 
 ### Current coverage snapshot
 
-Measured on `main` on 11 November 2026 from the **45 unit + 19 SQLite
+Measured on `main` on 12 November 2026 from the **46 unit + 19 SQLite
 integration tests**:
 
 | Scope | Line | Branch |
 |---|---:|---:|
-| Overall | **73.4%** (1,561 / 2,124) | **48.3%** (199 / 412) |
-| Application | 91.8% | 83.8% |
+| Overall | **74.1%** (1,626 / 2,195) | **48.8%** (208 / 426) |
+| Application | 91.7% | 80.5% |
 | Domain | 91.8% | 61.1% |
 | API | 61.7% | 35.7% |
-| Infrastructure | 71.1% | 55.4% |
-| Application + Domain | 91.8% | 79.1% |
-| Excluding generated OpenAPI and EF migrations | 86.8% | 68.3% |
+| Infrastructure | 71.2% | 55.4% |
+| Application + Domain | 91.7% | 77.0% |
+| Excluding generated OpenAPI and EF migrations | 87.1% | 68.1% |
 
-Method coverage is 88.3%; fully covered methods are 77.9%.
+Method coverage is 88.5%; fully covered methods are 77.4%.
 
 The raw number is dragged down by generated OpenAPI code and EF migrations.
 The NATS publisher is covered by the separate Testcontainers test, not by this

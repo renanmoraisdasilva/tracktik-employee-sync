@@ -40,7 +40,7 @@ public sealed class ProviderValidationTests
         result.IsFailure.ShouldBeTrue();
         result.Error!.Type.ShouldBe(ErrorType.Validation);
         result.Error.ValidationErrors.ShouldNotBeNull();
-        result.Error.ValidationErrors!.Keys.ShouldContain("EmailAddress");
+        result.Error.ValidationErrors!.Keys.ShouldContain("email_address");
     }
 
     [Fact]
@@ -74,6 +74,7 @@ public sealed class ProviderValidationTests
 
         result.IsFailure.ShouldBeTrue();
         result.Error!.Type.ShouldBe(ErrorType.Validation);
+        result.Error.ValidationErrors!.Keys.ShouldContain("email_address");
     }
 
     [Fact]
@@ -125,6 +126,7 @@ public sealed class ProviderValidationTests
 
         result.IsFailure.ShouldBeTrue();
         result.Error!.Type.ShouldBe(ErrorType.Validation);
+        result.Error.ValidationErrors!.Keys.ShouldContain("employment_status");
     }
 
     [Fact]
@@ -145,6 +147,7 @@ public sealed class ProviderValidationTests
 
         result.IsFailure.ShouldBeTrue();
         result.Error!.Type.ShouldBe(ErrorType.Validation);
+        result.Error.ValidationErrors!.Keys.ShouldContain("personal_info.email");
     }
 
     [Fact]

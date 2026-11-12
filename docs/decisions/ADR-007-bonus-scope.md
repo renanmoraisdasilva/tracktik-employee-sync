@@ -3,7 +3,7 @@
 - **Status:** Accepted
 - **Date:** 2026-11-11
 - **Deciders:** Renan Silva
-- **Related:** `docs/specs/001-employee-sync/plan.md`, `DECISIONS.md`
+- **Related:** `docs/specs/001-employee-sync/plan.md`
 
 ## Context
 

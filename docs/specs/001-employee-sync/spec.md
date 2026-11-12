@@ -5,7 +5,7 @@
 - **Owner:** Renan Silva
 - **Feature ID:** `001-employee-sync`
 - **Challenge:** TrackTik .NET Employee Sync Service (test ID `55bb3eca-352c-4516-b810-16570592d8b1`)
-- **Decisions:** `docs/decisions/`, `DECISIONS.md` in the planning package
+- **Decisions:** [`../../decisions/`](../../decisions/)
 - **Contract:** [`contracts/openapi.yaml`](contracts/openapi.yaml)
 - **Data model:** [`data-model.md`](data-model.md)
 - **Plan:** [`plan.md`](plan.md)
@@ -142,7 +142,8 @@ The first commit is mandatory. A forward failure must not roll back the row.
 - Request a token from the configured token URL with `grant_type`,
   `client_id` and `client_secret`.
 - Omit `scope` unless a specific scope is required.
-- Cache the token in memory until shortly before `expires_in` (60-second skew).
+- Cache the token in memory until shortly before `expires_in`. Refresh up to 60
+  seconds early; for short-lived tokens the skew is capped at half the lifetime.
 - Use a single-flight refresh so concurrent callers do not request multiple
   tokens.
 - On `401`, invalidate the token, refresh once and retry the employee call once.

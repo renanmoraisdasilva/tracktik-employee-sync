@@ -28,8 +28,8 @@ portable.
   mock from automated tests.
 - Add **Testcontainers SQL Server** tests in the opt-in
   `tests/EmployeeSync.Testcontainers` project, tagged `Category=Testcontainers`.
-- CI runs restore, build, **unit tests**, the **SQLite integration tests** and a
-  secret scan. It does not run the SQL Server/Testcontainers tests.
+- CI runs restore, build, **unit tests**, the **SQLite integration tests**, the
+  **Testcontainers tests** and a secret scan. The hosted runner provides Docker.
 - Do not chase 100% line coverage; cover every contract branch and the failure
   paths.
 
@@ -39,9 +39,9 @@ portable.
 - The Testcontainers bonus is real and can be demonstrated separately.
 - SQLite is relational but not SQL Server; a few SQL Server-specific behaviors
   are only covered by the opt-in project.
-- CI is deterministic and meaningful, and it exercises the HTTP pipeline through
-  SQLite. It builds the Testcontainers project to catch compile regressions but
-  does not run it; SQL Server-specific behaviour is still proven locally.
+- CI is deterministic and meaningful, and it exercises both the HTTP pipeline
+  through SQLite and the real SQL Server/NATS paths through Testcontainers.
+  The local default remains Docker-free.
 
 ## Alternatives considered
 
@@ -51,5 +51,5 @@ portable.
 - **EF Core InMemory** — hides relational constraints and duplicate-key bugs.
 - **Real mock in tests** — network-dependent, rate-limited and unable to simulate
   outages.
-- **SQL Server/Testcontainers tests in CI** — more configuration and flakiness
-  than the challenge needs; the SQLite integration tests stay in CI.
+- **Testcontainers as the default local test database** — slower and
+  Docker-dependent; it stays a separate CI/local project.

@@ -10,7 +10,7 @@ namespace EmployeeSync.Infrastructure.TrackTik;
 
 public sealed class TrackTikTokenProvider : ITrackTikTokenProvider
 {
-    private static readonly TimeSpan ExpirySkew = TimeSpan.FromSeconds(60);
+    private static readonly TimeSpan MaxExpirySkew = TimeSpan.FromSeconds(60);
 
     private readonly IHttpClientFactory _httpClientFactory;
     private readonly TrackTikOptions _options;
@@ -20,6 +20,7 @@ public sealed class TrackTikTokenProvider : ITrackTikTokenProvider
 
     private string? _cachedToken;
     private DateTimeOffset _expiresAt;
+    private TimeSpan _expirySkew = MaxExpirySkew;
 
     public TrackTikTokenProvider(
         IHttpClientFactory httpClientFactory,
@@ -82,9 +83,11 @@ public sealed class TrackTikTokenProvider : ITrackTikTokenProvider
                 throw new TrackTikException("The TrackTik token endpoint returned an empty access token.");
             }
 
+            var lifetime = TimeSpan.FromSeconds(Math.Max(token.ExpiresIn, 1));
+            _expirySkew = TimeSpan.FromTicks(
+                Math.Min(MaxExpirySkew.Ticks, lifetime.Ticks / 2));
             _cachedToken = token.AccessToken;
-            _expiresAt = _timeProvider.GetUtcNow()
-                .Add(TimeSpan.FromSeconds(Math.Max(token.ExpiresIn, 60)));
+            _expiresAt = _timeProvider.GetUtcNow().Add(lifetime);
 
             _logger.LogInformation("Obtained a TrackTik access token; expires at {ExpiresAt}.", _expiresAt);
             return _cachedToken;
@@ -119,7 +122,7 @@ public sealed class TrackTikTokenProvider : ITrackTikTokenProvider
 
     private bool HasValidToken() =>
         !string.IsNullOrWhiteSpace(_cachedToken)
-        && _timeProvider.GetUtcNow() < _expiresAt - ExpirySkew;
+        && _timeProvider.GetUtcNow() < _expiresAt - _expirySkew;
 
     private static string Truncate(string value) =>
         value.Length <= 400 ? value : value[..400];

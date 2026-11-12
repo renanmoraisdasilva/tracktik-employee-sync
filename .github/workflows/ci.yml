@@ -25,7 +25,7 @@ jobs:
       - name: Set up .NET
         uses: actions/setup-dotnet@v4
         with:
-          dotnet-version: 10.0.x
+          dotnet-version: 10.0.400
 
       - name: Restore
         run: dotnet restore EmployeeSync.sln
@@ -33,16 +33,16 @@ jobs:
       - name: Build
         run: dotnet build EmployeeSync.sln --configuration Release --no-restore
 
-      # The Testcontainers project is intentionally outside the solution so
-      # dotnet test stays Docker-free. Build it to catch compile regressions.
-      - name: Build Testcontainers tests
-        run: dotnet build tests/EmployeeSync.Testcontainers --configuration Release
-
       - name: Unit tests
         run: dotnet test tests/EmployeeSync.UnitTests --configuration Release --no-build
 
       - name: Integration tests (SQLite)
         run: dotnet test tests/EmployeeSync.IntegrationTests --configuration Release --no-build
+
+      # The project is outside the solution so a local `dotnet test` stays
+      # Docker-free, but the hosted runner has Docker available.
+      - name: Testcontainers tests (SQL Server + NATS)
+        run: dotnet test tests/EmployeeSync.Testcontainers --configuration Release
 
       - name: Secret scan
         run: |
