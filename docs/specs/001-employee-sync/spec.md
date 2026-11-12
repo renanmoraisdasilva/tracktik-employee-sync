@@ -421,10 +421,9 @@ migrations, run the tests and send the sample payloads using only the README.
 - Multi-tenancy.
 - More than two providers.
 - A UI.
-- CI integration/Testcontainers runs.
 
 ## 11. Open questions
 
-None. The decisions are recorded in the planning package's `DECISIONS.md` and in
-`docs/decisions/`. If an implementation detail changes a decision, update the
-decision record and this spec in the same change.
+None. The decisions are recorded in `docs/decisions/`. If an implementation
+detail changes a decision, update the decision record and this spec in the same
+change.
