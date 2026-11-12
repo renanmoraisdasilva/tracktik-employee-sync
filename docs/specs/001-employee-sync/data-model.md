@@ -14,7 +14,7 @@
 | `Id` | `uniqueidentifier` | No | `NEWSEQUENTIALID()` / app | Primary key. The selected design uses `uniqueidentifier`. |
 | `Provider` | `nvarchar(32)` | No | — | `provider1` / `provider2`, normalised lowercase. |
 | `ProviderEmployeeId` | `nvarchar(128)` | No | — | Source ID, case-sensitive (`Latin1_General_100_BIN2`). Part of the unique key. |
-| `TrackTikEmployeeId` | `nvarchar(160)` | No | — | `{Provider}-{ProviderEmployeeId}`. |
+| `TrackTikEmployeeId` | `nvarchar(160)` | No | — | `{Provider}-{ProviderEmployeeId}`. The supported 9-char provider names plus `1 + 128` fit; widen if a longer provider name is added. |
 | `FirstName` | `nvarchar(100)` | No | — | TrackTik required. |
 | `LastName` | `nvarchar(100)` | No | — | TrackTik required. |
 | `Email` | `nvarchar(320)` | No | — | Valid email; TrackTik required. |

@@ -501,7 +501,7 @@ An outbox is documented as a stretch goal, not implemented in v1.
 - Add inbound rate limiting for provider callers and an outbound resilience
   policy (backoff and `Retry-After`) for TrackTik 429/5xx.
 - Add OpenTelemetry tracing and metrics.
-- Run the full 19-test integration suite against SQL Server in CI, beyond the
+- Run the full 21-test integration suite against SQL Server in CI, beyond the
   focused Testcontainers tests.
 - Add a `SyncAttempts` table for auditability.
 - Add contract tests generated from the OpenAPI document.

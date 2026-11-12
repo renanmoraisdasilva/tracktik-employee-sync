@@ -46,6 +46,8 @@ public sealed class AppDbContext : DbContext
                 providerEmployeeId.UseCollation("Latin1_General_100_BIN2");
             }
 
+            // Supported provider names are 9 chars, so 160 covers 9 + 1 + 128;
+            // the 32-char Provider column is a future bound.
             builder.Property(employee => employee.TrackTikEmployeeId)
                 .HasMaxLength(160)
                 .IsRequired();
